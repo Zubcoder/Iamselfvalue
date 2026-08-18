@@ -13,11 +13,11 @@
   <meta property="og:description" content="Индивидуальные сессии, системные расстановки, добаюкивание и телесная терапия для женщин. 300+ клиентов." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://iamselfvalue.ru/" />
-  <meta property="og:image" content="https://iamselfvalue.ru/hero.png" />
+  <meta property="og:image" content="https://iamselfvalue.ru/hero-bg.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Я Есть Ценность — коуч-психолог" />
   <meta name="twitter:description" content="Сессии, расстановки, добаюкивание и телесная терапия." />
-  <meta name="twitter:image" content="https://iamselfvalue.ru/hero.png" />
+  <meta name="twitter:image" content="https://iamselfvalue.ru/hero-bg.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -33,7 +33,7 @@
     "description": "Коуч-психолог, расстановщик, мастер добаюкивания и телесно-ориентированный психотерапевт. 300+ клиентов.",
     "url": "https://iamselfvalue.ru/",
     "sameAs": ["https://t.me/iamselfvalue"],
-    "image": "https://iamselfvalue.ru/hero.png",
+    "image": "https://iamselfvalue.ru/hero-bg.png",
     "makesOffer": [
       { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Индивидуальная психологическая сессия" }, "price": "5000", "priceCurrency": "RUB" },
       { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Системные расстановки" }, "price": "10000", "priceCurrency": "RUB" },
@@ -195,10 +195,7 @@
       justify-content: center;
       text-align: center;
       padding: 140px 0 100px;
-      background:
-        radial-gradient(circle at 25% 20%, rgba(212, 175, 55, 0.14) 0%, transparent 45%),
-        radial-gradient(circle at 85% 80%, var(--accent) 0%, transparent 45%),
-        var(--bg);
+      background: url('hero-bg.png') center/cover no-repeat;
       position: relative;
       overflow: hidden;
     }
@@ -207,16 +204,22 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.04) 0%, transparent 60%);
+      background: linear-gradient(135deg, rgba(16, 80, 64, 0.78) 0%, rgba(66, 49, 137, 0.78) 100%);
       pointer-events: none;
     }
 
+    body[data-theme="purple"] .hero::before {
+      background: linear-gradient(135deg, rgba(66, 49, 137, 0.78) 0%, rgba(16, 80, 64, 0.78) 100%);
+    }
+
+    .hero .container { position: relative; z-index: 1; }
+
     .hero-logo {
-      width: 160px;
-      height: 160px;
+      width: 180px;
+      height: 180px;
       object-fit: contain;
       margin-bottom: 28px;
-      filter: drop-shadow(0 24px 48px rgba(0,0,0,0.25));
+      filter: drop-shadow(0 24px 48px rgba(0,0,0,0.35));
       transition: transform 0.6s ease;
     }
 
