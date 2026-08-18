@@ -214,17 +214,6 @@
 
     .hero .container { position: relative; z-index: 1; }
 
-    .hero-logo {
-      width: 180px;
-      height: 180px;
-      object-fit: contain;
-      margin-bottom: 28px;
-      filter: drop-shadow(0 24px 48px rgba(0,0,0,0.35));
-      transition: transform 0.6s ease;
-    }
-
-    .hero-logo:hover { transform: scale(1.04); }
-
     .hero h1 {
       font-size: clamp(2.6rem, 6vw, 5rem);
       margin-bottom: 20px;
@@ -476,7 +465,6 @@
 
     @media (max-width: 600px) {
       .hero { padding: 120px 0 70px; }
-      .hero-logo { width: 120px; height: 120px; }
       .hero-actions { flex-direction: column; }
       .btn { width: 100%; }
       .contact-box { padding: 34px 24px; }
@@ -511,7 +499,6 @@
   <main>
     <section class="hero" id="top">
       <div class="container">
-        <img class="hero-logo" src="logo-icon.png" alt="Логотип Я Есть Ценность" />
         <h1>Я Есть <span>Ценность</span></h1>
         <p>Пространство для женщин, которые устали быть «хорошими» и готовы встретиться с собой настоящей — через бережную психологию, расстановки и добаюкавание.</p>
         <div class="hero-actions">
@@ -715,7 +702,6 @@
     (function() {
       const root = document.body;
       const toggle = document.getElementById('themeToggle');
-      const heroLogo = document.querySelector('.hero-logo');
       const headerLogo = document.querySelector('.logo img');
       const saved = localStorage.getItem('theme') || 'emerald';
       function apply(theme) {
@@ -723,7 +709,6 @@
         const isPurple = theme === 'purple';
         if (toggle) toggle.textContent = isPurple ? 'Изумрудная тема' : 'Фиолетовая тема';
         const logoSrc = isPurple ? 'logo-icon-purple.png' : 'logo-icon.png';
-        if (heroLogo) heroLogo.src = logoSrc;
         if (headerLogo) headerLogo.src = logoSrc;
       }
       apply(saved);
