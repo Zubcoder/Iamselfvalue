@@ -13,11 +13,11 @@
   <meta property="og:description" content="Индивидуальные сессии, системные расстановки, добаюкивание и телесная терапия для женщин. 300+ клиентов." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://iamselfvalue.ru/" />
-  <meta property="og:image" content="https://iamselfvalue.ru/hero.png" />
+  <meta property="og:image" content="https://iamselfvalue.ru/hero-bg.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Я Есть Ценность — коуч-психолог" />
   <meta name="twitter:description" content="Сессии, расстановки, добаюкивание и телесная терапия." />
-  <meta name="twitter:image" content="https://iamselfvalue.ru/hero.png" />
+  <meta name="twitter:image" content="https://iamselfvalue.ru/hero-bg.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -33,7 +33,7 @@
     "description": "Коуч-психолог, расстановщик, мастер добаюкивания и телесно-ориентированный психотерапевт. 300+ клиентов.",
     "url": "https://iamselfvalue.ru/",
     "sameAs": ["https://t.me/iamselfvalue"],
-    "image": "https://iamselfvalue.ru/hero.png",
+    "image": "https://iamselfvalue.ru/hero-bg.png",
     "makesOffer": [
       { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Индивидуальная психологическая сессия" }, "price": "5000", "priceCurrency": "RUB" },
       { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Системные расстановки" }, "price": "10000", "priceCurrency": "RUB" },
@@ -45,17 +45,29 @@
 
   <style>
     :root {
-      --cream: #FDF9F7;
+      --emerald: #105040;
+      --emerald-dark: #0a3b2e;
+      --purple: #423189;
+      --purple-dark: #2f2364;
+      --gold: #D4AF37;
       --white: #FFFFFF;
-      --purple: #7B61FF;
-      --lilac: #B8A3FF;
-      --lilac-light: #EDE8FF;
-      --rose: #D4A5A5;
-      --text: #3A2E4D;
-      --text-muted: #6D5E80;
+      --text: #FFFFFF;
+      --text-muted: rgba(255, 255, 255, 0.75);
+      --bg: var(--emerald);
+      --bg-dark: var(--emerald-dark);
+      --accent: var(--purple);
+      --card-bg: rgba(255, 255, 255, 0.07);
+      --card-bg-hover: rgba(255, 255, 255, 0.12);
+      --section-alt: rgba(0, 0, 0, 0.15);
       --radius: 20px;
-      --shadow: 0 20px 60px rgba(123, 97, 255, 0.12);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
       --max-width: 1120px;
+    }
+
+    body[data-theme="purple"] {
+      --bg: var(--purple);
+      --bg-dark: var(--purple-dark);
+      --accent: var(--emerald);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -64,9 +76,10 @@
     body {
       font-family: 'Montserrat', sans-serif;
       color: var(--text);
-      background: var(--cream);
+      background: var(--bg);
       line-height: 1.7;
       overflow-x: hidden;
+      transition: background-color 0.5s ease, color 0.5s ease;
     }
 
     h1, h2, h3 {
@@ -98,31 +111,29 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--purple), var(--lilac));
-      color: var(--white);
-      box-shadow: 0 12px 32px rgba(123, 97, 255, 0.35);
+      background: linear-gradient(135deg, var(--gold), #B8962F);
+      color: var(--bg-dark);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
     }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 16px 40px rgba(123, 97, 255, 0.45);
-    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35); }
 
     .btn-outline {
       background: transparent;
-      color: var(--purple);
-      border: 2px solid var(--lilac);
+      color: var(--text);
+      border: 2px solid rgba(255, 255, 255, 0.4);
     }
 
-    .btn-outline:hover { background: var(--lilac-light); }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--text); }
 
     header {
       position: fixed;
       top: 0; left: 0; right: 0;
       z-index: 100;
-      background: rgba(253, 249, 247, 0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(184, 163, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      transition: background-color 0.3s;
     }
 
     .header-inner {
@@ -138,19 +149,35 @@
       gap: 12px;
       font-weight: 700;
       font-size: 1.05rem;
+      color: var(--text);
     }
 
     .logo img {
       width: 42px;
       height: 42px;
-      border-radius: 50%;
-      object-fit: cover;
-      box-shadow: 0 4px 12px rgba(123, 97, 255, 0.2);
+      border-radius: 12px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
     }
 
-    nav { display: flex; align-items: center; gap: 24px; }
+    nav { display: flex; align-items: center; gap: 20px; }
     nav a { font-weight: 500; font-size: 0.9rem; color: var(--text); transition: color 0.2s; }
-    nav a:hover { color: var(--purple); }
+    nav a:hover { color: var(--gold); }
+
+    .theme-toggle {
+      padding: 8px 16px;
+      border-radius: 50px;
+      background: var(--accent);
+      color: var(--text);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.78rem;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .theme-toggle:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
 
     .burger {
       display: none;
@@ -162,87 +189,69 @@
     .burger span { width: 26px; height: 2px; background: var(--text); border-radius: 2px; }
 
     .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
       padding: 140px 0 100px;
-      background:
-        radial-gradient(circle at 90% 20%, var(--lilac-light) 0%, transparent 45%),
-        radial-gradient(circle at 10% 80%, rgba(212, 165, 165, 0.18) 0%, transparent 45%);
+      background: url('hero-bg.png') center/cover no-repeat;
+      position: relative;
+      overflow: hidden;
     }
 
-    .hero-inner {
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: 60px;
-      align-items: center;
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(16, 80, 64, 0.78) 0%, rgba(66, 49, 137, 0.78) 100%);
+      pointer-events: none;
     }
 
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 18px;
-      background: var(--white);
-      border: 1px solid var(--lilac-light);
-      border-radius: 50px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--purple);
-      margin-bottom: 24px;
+    body[data-theme="purple"] .hero::before {
+      background: linear-gradient(135deg, rgba(66, 49, 137, 0.78) 0%, rgba(16, 80, 64, 0.78) 100%);
     }
+
+    .hero .container { position: relative; z-index: 1; }
 
     .hero h1 {
-      font-size: clamp(2.4rem, 5.5vw, 4.2rem);
-      margin-bottom: 22px;
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      margin-bottom: 20px;
     }
 
-    .hero h1 span { display: block; color: var(--purple); }
+    .hero h1 span { color: var(--gold); }
 
     .hero p {
       font-size: 1.15rem;
       color: var(--text-muted);
-      max-width: 540px;
-      margin-bottom: 34px;
+      max-width: 600px;
+      margin: 0 auto 34px;
     }
 
-    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 
-    .hero-image { position: relative; }
-
-    .hero-image img {
-      width: 100%;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+    .hero-badges {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 34px;
     }
 
-    .hero-float {
-      position: absolute;
-      bottom: -24px;
-      left: -24px;
-      background: var(--white);
-      padding: 18px 24px;
-      border-radius: var(--radius);
-      box-shadow: 0 14px 44px rgba(123, 97, 255, 0.16);
+    .hero-badge-pill {
+      padding: 10px 18px;
+      border-radius: 50px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 0.85rem;
+      color: var(--text-muted);
     }
 
-    .hero-float strong { display: block; font-size: 1.6rem; color: var(--purple); }
-    .hero-float span { font-size: 0.85rem; color: var(--text-muted); }
+    .section { padding: 90px 0; }
+    .section-alt { background: var(--section-alt); }
 
-    .section {
-      padding: 90px 0;
-    }
-
-    .section-alt { background: var(--white); }
-
-    .section-header {
-      text-align: center;
-      max-width: 660px;
-      margin: 0 auto 56px;
-    }
-
-    .section-header h2 {
-      font-size: clamp(1.8rem, 3vw, 2.6rem);
-      margin-bottom: 14px;
-    }
-
+    .section-header { text-align: center; max-width: 660px; margin: 0 auto 56px; }
+    .section-header h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); margin-bottom: 14px; }
     .section-header p { color: var(--text-muted); }
 
     .about-inner {
@@ -255,33 +264,21 @@
     .about h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); margin-bottom: 24px; }
     .about p { color: var(--text-muted); margin-bottom: 18px; }
 
-    .about-stats {
-      display: flex;
-      gap: 40px;
-      margin-top: 32px;
-    }
+    .about-stats { display: flex; gap: 40px; margin-top: 32px; }
 
-    .stat strong { display: block; font-size: 2rem; color: var(--purple); font-weight: 700; }
+    .stat strong { display: block; font-size: 2rem; color: var(--gold); font-weight: 700; }
     .stat span { font-size: 0.85rem; color: var(--text-muted); }
 
-    .about-photo {
-      position: relative;
-      display: flex;
-      justify-content: center;
-    }
+    .about-photo { display: flex; justify-content: center; }
 
-    .about-photo-placeholder {
-      width: 340px;
+    .about-photo img {
+      width: 100%;
+      max-width: 340px;
       height: 420px;
-      background: linear-gradient(135deg, var(--lilac-light), rgba(212, 165, 165, 0.25));
+      object-fit: cover;
       border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      text-align: center;
       box-shadow: var(--shadow);
+      border: 4px solid rgba(255,255,255,0.08);
     }
 
     .cards {
@@ -291,23 +288,24 @@
     }
 
     .card {
-      background: var(--white);
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: var(--radius);
       padding: 34px 28px;
-      box-shadow: 0 10px 40px rgba(123, 97, 255, 0.08);
-      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: var(--shadow);
+      transition: transform 0.3s, background 0.3s;
     }
 
     .card:hover {
       transform: translateY(-6px);
-      box-shadow: 0 20px 60px rgba(123, 97, 255, 0.14);
+      background: var(--card-bg-hover);
     }
 
     .card-icon {
       width: 54px;
       height: 54px;
       border-radius: 14px;
-      background: var(--lilac-light);
+      background: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -322,16 +320,11 @@
       display: inline-block;
       font-weight: 700;
       font-size: 1.25rem;
-      color: var(--purple);
+      color: var(--gold);
       margin-top: auto;
     }
 
-    .price small {
-      display: block;
-      font-weight: 400;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
+    .price small { display: block; font-weight: 400; font-size: 0.8rem; color: var(--text-muted); }
 
     .feature-list { list-style: none; margin: 16px 0; }
     .feature-list li {
@@ -346,7 +339,7 @@
       content: "✦";
       position: absolute;
       left: 0;
-      color: var(--lilac);
+      color: var(--gold);
     }
 
     .detail-grid {
@@ -359,17 +352,14 @@
     .detail-grid.reverse { direction: rtl; }
     .detail-grid.reverse > * { direction: ltr; }
 
-    .detail-content h3 {
-      font-size: 1.7rem;
-      margin-bottom: 18px;
-    }
-
+    .detail-content h3 { font-size: 1.7rem; margin-bottom: 18px; }
     .detail-content p { color: var(--text-muted); margin-bottom: 14px; }
 
     .detail-image img {
       width: 100%;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
+      border: 4px solid rgba(255,255,255,0.08);
     }
 
     .reviews-grid {
@@ -379,25 +369,44 @@
     }
 
     .review {
-      background: var(--white);
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: var(--radius);
       padding: 30px;
-      box-shadow: 0 10px 40px rgba(123, 97, 255, 0.08);
+      box-shadow: var(--shadow);
     }
 
-    .review-stars { color: #FFB800; font-size: 1.1rem; margin-bottom: 14px; }
+    .review-stars { color: var(--gold); font-size: 1.1rem; margin-bottom: 14px; }
     .review p { font-style: italic; color: var(--text-muted); margin-bottom: 16px; }
     .review-author { font-weight: 600; color: var(--text); }
+
+    .video-section { background: var(--section-alt); }
+    .video-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .video-wrapper video {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
 
     .contact {
       padding: 100px 0;
       background:
-        radial-gradient(circle at 20% 30%, var(--lilac-light) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(212, 165, 165, 0.18) 0%, transparent 50%);
+        radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, var(--accent) 0%, transparent 50%),
+        var(--bg);
     }
 
     .contact-box {
-      background: var(--white);
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: var(--radius);
       padding: 60px;
       text-align: center;
@@ -409,13 +418,13 @@
 
     footer {
       padding: 34px 0;
-      background: var(--text);
-      color: var(--white);
+      background: rgba(0, 0, 0, 0.25);
+      color: var(--text);
       text-align: center;
       font-size: 0.9rem;
     }
 
-    footer a { color: var(--lilac); font-weight: 500; }
+    footer a { color: var(--gold); font-weight: 500; }
 
     @media (max-width: 920px) {
       .hero-inner,
@@ -426,26 +435,27 @@
 
       .hero-image { order: -1; }
 
-      .hero-float {
-        left: auto;
-        right: 12px;
-        bottom: -12px;
-      }
-
       nav {
         display: none;
         position: absolute;
         top: 76px;
         left: 0;
         right: 0;
-        background: var(--white);
+        background: var(--bg);
         flex-direction: column;
         padding: 24px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        gap: 14px;
       }
 
       nav.open { display: flex; }
       .burger { display: flex; }
+
+      .theme-toggle {
+        position: absolute;
+        top: 22px;
+        right: 64px;
+      }
 
       .about-stats,
       .detail-grid.reverse {
@@ -472,12 +482,14 @@
       <nav id="nav">
         <a href="#about">Обо мне</a>
         <a href="#services">Услуги</a>
+        <a href="#video">Видео</a>
         <a href="#constellations">Расстановки</a>
         <a href="#reparenting">Добаюкавание</a>
         <a href="#body">Телесная терапия</a>
         <a href="#reviews">Отзывы</a>
         <a href="#contact">Контакты</a>
       </nav>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Сменить тему">Фиолетовая тема</button>
       <div class="burger" onclick="document.getElementById('nav').classList.toggle('open')">
         <span></span><span></span><span></span>
       </div>
@@ -486,22 +498,32 @@
 
   <main>
     <section class="hero" id="top">
-      <div class="container hero-inner">
-        <div>
-          <div class="hero-badge">Коучинг · Расстановки · Добаюкавание · Телесная терапия</div>
-          <h1>Я Есть <span>Ценность</span></h1>
-          <p>Пространство для женщин, которые устали быть «хорошими» и готовы встретиться с собой настоящей — через бережную психологию, расстановки и добаюкавание.</p>
-          <div class="hero-actions">
-            <a href="https://t.me/iamselfvalue" class="btn btn-primary" target="_blank" rel="noopener">Написать в Telegram</a>
-            <a href="#services" class="btn btn-outline">Услуги</a>
-          </div>
+      <div class="container">
+        <h1>Я Есть <span>Ценность</span></h1>
+        <p>Пространство для женщин, которые устали быть «хорошими» и готовы встретиться с собой настоящей — через бережную психологию, расстановки и добаюкавание.</p>
+        <div class="hero-actions">
+          <a href="https://t.me/iamselfvalue" class="btn btn-primary" target="_blank" rel="noopener">Написать в Telegram</a>
+          <a href="#services" class="btn btn-outline">Услуги</a>
         </div>
-        <div class="hero-image">
-          <img src="hero.png" alt="Женское пространство Я Есть Ценность" />
-          <div class="hero-float">
-            <strong>300+</strong>
-            <span>пройденных клиентов</span>
-          </div>
+        <div class="hero-badges">
+          <span class="hero-badge-pill">300+ клиентов</span>
+          <span class="hero-badge-pill">4 направления</span>
+          <span class="hero-badge-pill">201 участница Telegram</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="video">
+      <div class="container">
+        <div class="section-header">
+          <h2>Визитка за 30 секунд</h2>
+          <p>Нежная нарезка о том, как я работаю и с чем могу помочь.</p>
+        </div>
+        <div class="video-wrapper">
+          <video controls playsinline autoplay muted loop poster="video/slide1.png" preload="metadata">
+            <source src="video/promo.mp4" type="video/mp4" />
+            Ваш браузер не поддерживает видео. <a href="https://t.me/iamselfvalue" target="_blank" rel="noopener">Напишите мне в Telegram</a>.
+          </video>
         </div>
       </div>
     </section>
@@ -590,7 +612,7 @@
           </ul>
         </div>
         <div class="detail-image">
-          <img src="hero.png" alt="Системные расстановки" />
+          <img src="detail-constellations.png" alt="Системные расстановки" />
         </div>
       </div>
     </section>
@@ -598,7 +620,7 @@
     <section class="section" id="reparenting">
       <div class="container detail-grid reverse">
         <div class="detail-image">
-          <img src="hero.png" alt="Добаюкавание" />
+          <img src="detail-reparenting.png" alt="Добаюкавание" />
         </div>
         <div class="detail-content">
           <h3>Добаюкавание</h3>
@@ -628,7 +650,7 @@
           </ul>
         </div>
         <div class="detail-image">
-          <img src="hero.png" alt="Телесная терапия" />
+          <img src="detail-body.png" alt="Телесная терапия" />
         </div>
       </div>
     </section>
@@ -675,5 +697,30 @@
       <p>© 2026 Я Есть Ценность · <a href="https://t.me/iamselfvalue" target="_blank" rel="noopener">t.me/iamselfvalue</a></p>
     </div>
   </footer>
+
+  <script>
+    (function() {
+      const root = document.body;
+      const toggle = document.getElementById('themeToggle');
+      const headerLogo = document.querySelector('.logo img');
+      const saved = localStorage.getItem('theme') || 'emerald';
+      function apply(theme) {
+        root.setAttribute('data-theme', theme);
+        const isPurple = theme === 'purple';
+        if (toggle) toggle.textContent = isPurple ? 'Изумрудная тема' : 'Фиолетовая тема';
+        const logoSrc = isPurple ? 'logo-icon-purple.png' : 'logo-icon.png';
+        if (headerLogo) headerLogo.src = logoSrc;
+      }
+      apply(saved);
+      if (toggle) {
+        toggle.addEventListener('click', function() {
+          const current = root.getAttribute('data-theme') || 'emerald';
+          const next = current === 'purple' ? 'emerald' : 'purple';
+          localStorage.setItem('theme', next);
+          apply(next);
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
