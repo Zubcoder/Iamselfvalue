@@ -120,8 +120,11 @@ def make_sticker(bot_username='iamselfvalue_bot', campaign='orange_jam'):
     brand_y = 200
     draw_text_center(draw, 'Я Есть Ценность', brand_y, brand_font, GOLD)
 
-    flavor_y = 265
+    flavor_y = 260
     draw_text_center(draw, 'Апельсиновый джем', flavor_y, flavor_font, WHITE)
+
+    tagline_y = 305
+    draw_text_center(draw, 'Твое наслаждение', tagline_y, sub_font, GOLD)
 
     sub_y = 720
     draw_text_center(draw, 'Раскрой своё внутреннее солнце', sub_y, sub_font, GOLD)
