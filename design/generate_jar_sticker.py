@@ -114,31 +114,31 @@ def make_sticker(bot_username='iamselfvalue_bot', campaign='orange_jam'):
         alpha = logo.split()[-1].point(lambda a: int(a * 0.85))
         logo.putalpha(alpha)
         lx = (TOTAL - logo_size) // 2
-        ly = 85
+        ly = 96
         img.paste(logo, (lx, ly), logo)
 
     # Fonts (scaled for the 45 mm sticker)
-    brand_font = load_font(FONT_SERIF, 26)
+    brand_font = load_font(FONT_SERIF, 24)
     flavor_font = load_font(FONT_SANS_BOLD, 22)
     tagline_font = load_font(FONT_SANS, 18)
     sub_font = load_font(FONT_SANS, 16)
     hint_font = load_font(FONT_SANS, 14)
 
     # Texts
-    brand_y = 145
+    brand_y = 148
     draw_text_center(draw, 'Я Есть Ценность', brand_y, brand_font, GOLD)
 
-    flavor_y = 172
+    flavor_y = 175
     draw_text_center(draw, 'Апельсиновый джем', flavor_y, flavor_font, WHITE)
 
-    tagline_y = 195
+    tagline_y = 198
     draw_text_center(draw, 'Твое наслаждение', tagline_y, tagline_font, GOLD)
 
     # QR code in center
     qr_size = 180
     qr = make_qr(url, qr_size)
     qx = (TOTAL - qr_size) // 2
-    qy = CENTER - (qr_size // 2) + 10
+    qy = CENTER - (qr_size // 2) + 20
     # white rounded backing
     backing = Image.new('RGBA', (qr_size + 20, qr_size + 20), WHITE)
     draw_back = ImageDraw.Draw(backing)
