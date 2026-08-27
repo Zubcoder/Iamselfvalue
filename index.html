@@ -64,12 +64,6 @@
       --max-width: 1120px;
     }
 
-    body[data-theme="purple"] {
-      --bg: var(--purple);
-      --bg-dark: var(--purple-dark);
-      --accent: var(--emerald);
-    }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
 
@@ -164,20 +158,7 @@
     nav a { font-weight: 500; font-size: 0.9rem; color: var(--text); transition: color 0.2s; }
     nav a:hover { color: var(--gold); }
 
-    .theme-toggle {
-      padding: 8px 16px;
-      border-radius: 50px;
-      background: var(--accent);
-      color: var(--text);
-      font-family: inherit;
-      font-weight: 600;
-      font-size: 0.78rem;
-      border: none;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .theme-toggle:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+    .theme-toggle { display: none; }
 
     .burger {
       display: none;
@@ -206,10 +187,6 @@
       inset: 0;
       background: linear-gradient(135deg, rgba(16, 80, 64, 0.78) 0%, rgba(66, 49, 137, 0.78) 100%);
       pointer-events: none;
-    }
-
-    body[data-theme="purple"] .hero::before {
-      background: linear-gradient(135deg, rgba(66, 49, 137, 0.78) 0%, rgba(16, 80, 64, 0.78) 100%);
     }
 
     .hero .container { position: relative; z-index: 1; }
@@ -247,8 +224,21 @@
       color: var(--text-muted);
     }
 
-    .section { padding: 90px 0; }
-    .section-alt { background: var(--section-alt); }
+    .section,
+    .section-alt,
+    .contact {
+      padding: 90px 0;
+      background-image: url('section-bg.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-color: rgba(0, 0, 0, 0.38);
+      background-blend-mode: multiply;
+    }
+
+    .section-alt {
+      /* same volumetric fabric background across all sections */
+    }
 
     .section-header { text-align: center; max-width: 660px; margin: 0 auto 56px; }
     .section-header h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); margin-bottom: 14px; }
@@ -380,7 +370,7 @@
     .review p { font-style: italic; color: var(--text-muted); margin-bottom: 16px; }
     .review-author { font-weight: 600; color: var(--text); }
 
-    .video-section { background: var(--section-alt); }
+    .video-section { }
     .video-wrapper {
       max-width: 900px;
       margin: 0 auto;
@@ -398,10 +388,6 @@
 
     .contact {
       padding: 100px 0;
-      background:
-        radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.12) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, var(--accent) 0%, transparent 50%),
-        var(--bg);
     }
 
     .contact-box {
@@ -451,12 +437,6 @@
       nav.open { display: flex; }
       .burger { display: flex; }
 
-      .theme-toggle {
-        position: absolute;
-        top: 22px;
-        right: 64px;
-      }
-
       .about-stats,
       .detail-grid.reverse {
         direction: ltr;
@@ -489,7 +469,6 @@
         <a href="#reviews">Отзывы</a>
         <a href="#contact">Контакты</a>
       </nav>
-      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Сменить тему">Фиолетовая тема</button>
       <div class="burger" onclick="document.getElementById('nav').classList.toggle('open')">
         <span></span><span></span><span></span>
       </div>
@@ -528,7 +507,7 @@
       </div>
     </section>
 
-    <section class="section section-alt" id="about">
+    <section class="section" id="about">
       <div class="container about-inner">
         <div>
           <h2>Обо мне</h2>
@@ -546,7 +525,7 @@
       </div>
     </section>
 
-    <section class="section" id="services">
+    <section class="section section-alt" id="services">
       <div class="container">
         <div class="section-header">
           <h2>Услуги</h2>
@@ -598,7 +577,7 @@
       </div>
     </section>
 
-    <section class="section section-alt" id="constellations">
+    <section class="section" id="constellations">
       <div class="container detail-grid">
         <div class="detail-content">
           <h3>Системные расстановки</h3>
@@ -617,7 +596,7 @@
       </div>
     </section>
 
-    <section class="section" id="reparenting">
+    <section class="section section-alt" id="reparenting">
       <div class="container detail-grid reverse">
         <div class="detail-image">
           <img src="detail-reparenting.png" alt="Добаюкавание" />
@@ -636,7 +615,7 @@
       </div>
     </section>
 
-    <section class="section section-alt" id="body">
+    <section class="section" id="body">
       <div class="container detail-grid">
         <div class="detail-content">
           <h3>Телесно-ориентированная терапия</h3>
@@ -655,7 +634,7 @@
       </div>
     </section>
 
-    <section class="section" id="reviews">
+    <section class="section section-alt" id="reviews">
       <div class="container">
         <div class="section-header">
           <h2>Отзывы</h2>
@@ -700,24 +679,11 @@
 
   <script>
     (function() {
-      const root = document.body;
-      const toggle = document.getElementById('themeToggle');
-      const headerLogo = document.querySelector('.logo img');
-      const saved = localStorage.getItem('theme') || 'emerald';
-      function apply(theme) {
-        root.setAttribute('data-theme', theme);
-        const isPurple = theme === 'purple';
-        if (toggle) toggle.textContent = isPurple ? 'Изумрудная тема' : 'Фиолетовая тема';
-        const logoSrc = isPurple ? 'logo-icon-purple.png' : 'logo-icon.png';
-        if (headerLogo) headerLogo.src = logoSrc;
-      }
-      apply(saved);
-      if (toggle) {
-        toggle.addEventListener('click', function() {
-          const current = root.getAttribute('data-theme') || 'emerald';
-          const next = current === 'purple' ? 'emerald' : 'purple';
-          localStorage.setItem('theme', next);
-          apply(next);
+      const nav = document.getElementById('nav');
+      const burger = document.querySelector('.burger');
+      if (burger && nav) {
+        burger.addEventListener('click', function() {
+          nav.classList.toggle('open');
         });
       }
     })();
