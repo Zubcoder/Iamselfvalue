@@ -105,40 +105,28 @@ def make_sticker(bot_username='iamselfvalue_bot', campaign='orange_jam'):
     draw.ellipse((B, B, B + D - 1, B + D - 1), outline=GOLD, width=3)
     draw.ellipse((B + 18, B + 18, B + D - 19, B + D - 19), outline=GOLD, width=1)
 
-    # Add subtle lotus logo at top
-    if os.path.exists(LOGO_PATH):
-        logo = Image.open(LOGO_PATH).convert('RGBA')
-        logo_size = 45
-        logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
-        # Slightly fade to blend with background
-        alpha = logo.split()[-1].point(lambda a: int(a * 0.85))
-        logo.putalpha(alpha)
-        lx = (TOTAL - logo_size) // 2
-        ly = 96
-        img.paste(logo, (lx, ly), logo)
-
     # Fonts (scaled for the 45 mm sticker)
     brand_font = load_font(FONT_SERIF, 24)
     flavor_font = load_font(FONT_SANS_BOLD, 22)
     tagline_font = load_font(FONT_SANS, 18)
-    sub_font = load_font(FONT_SANS, 14)
+    sub_font = load_font(FONT_SANS, 13)
     hint_font = load_font(FONT_SANS, 14)
 
-    # Texts
-    brand_y = 150
+    # Equal vertical spacing between all text elements
+    GAP = 25
+    brand_y = 132
+    flavor_y = brand_y + 22 + GAP
+    tagline_y = flavor_y + 20 + GAP
+
     draw_text_center(draw, 'Я Есть Ценность', brand_y, brand_font, GOLD)
-
-    flavor_y = 170
     draw_text_center(draw, 'Апельсиновый джем', flavor_y, flavor_font, WHITE)
-
-    tagline_y = 195
     draw_text_center(draw, 'Твое наслаждение', tagline_y, tagline_font, GOLD)
 
-    # QR code in center
-    qr_size = 170
+    # QR code below the top text block
+    qr_size = 130
     qr = make_qr(url, qr_size)
     qx = (TOTAL - qr_size) // 2
-    qy = CENTER - (qr_size // 2) + 20
+    qy = tagline_y + 15 + GAP
     # white rounded backing
     backing = Image.new('RGBA', (qr_size + 20, qr_size + 20), WHITE)
     draw_back = ImageDraw.Draw(backing)
@@ -146,11 +134,10 @@ def make_sticker(bot_username='iamselfvalue_bot', campaign='orange_jam'):
     img.paste(backing, (qx - 10, qy - 10), backing)
     img.paste(qr, (qx, qy), qr)
 
-    # Call-to-action below QR
-    hint_y = qy + qr_size + 15
+    # Call-to-action below QR with the same spacing
+    hint_y = qy + qr_size + GAP
+    sub_y = hint_y + 14 + GAP
     draw_text_center(draw, 'Сканируй → медитация', hint_y, hint_font, WHITE, shadow=False)
-
-    sub_y = hint_y + 25
     draw_text_center(draw, 'Раскрой своё внутреннее солнце', sub_y, sub_font, GOLD, shadow=False)
 
     # Save print file (with bleed, transparent outside cut circle)
