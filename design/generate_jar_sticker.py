@@ -4,18 +4,20 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 
-# 80 mm diameter sticker at 300 dpi, plus 3 mm bleed
+# 45 mm diameter sticker at 300 dpi, plus 3 mm bleed
+# The lid diameter of the photographed 100 ml hexagonal jar is ~48 mm,
+# so the sticker is 45 mm (a little smaller than the lid) with 3 mm bleed.
 MM_TO_PX = 300 / 25.4
-DIAMETER_MM = 80
+DIAMETER_MM = 45
 BLEED_MM = 3
 SAFE_MM = 5
-D = int(DIAMETER_MM * MM_TO_PX)          # 945 px cut size
-B = int(BLEED_MM * MM_TO_PX)             # 36 px bleed
+D = int(DIAMETER_MM * MM_TO_PX)          # 531 px cut size
+B = int(BLEED_MM * MM_TO_PX)             # 35 px bleed
 S = int(SAFE_MM * MM_TO_PX)              # 59 px safe margin
-TOTAL = D + 2 * B                        # 1017 px print file
+TOTAL = D + 2 * B                        # 601 px print file
 CENTER = TOTAL // 2
-R = D // 2                               # 472 px cut radius
-R_SAFE = R - S                           # 413 px safe radius
+R = D // 2                               # 265 px cut radius
+R_SAFE = R - S                           # 206 px safe radius
 
 EMERALD = '#105040'
 PURPLE = '#423189'
@@ -58,14 +60,19 @@ def radial_gradient(size, center_color, edge_color):
 
 
 def make_qr(url, size):
+    # Determine QR version first, then choose an integer box size that
+    # lands close to the target size to keep the modules sharp.
     qr = qrcode.QRCode(
         version=None,
         error_correction=qrcode.constants.ERROR_CORRECT_H,
-        box_size=12,
+        box_size=1,
         border=2,
     )
     qr.add_data(url)
     qr.make(fit=True)
+    total_cells = qr.modules_count + 2 * qr.border
+    box_size = max(2, size // total_cells)
+    qr.box_size = box_size
     qr_img = qr.make_image(fill_color='black', back_color='white').convert('RGBA')
     qr_img = qr_img.resize((size, size), Image.LANCZOS)
     return qr_img
@@ -101,39 +108,37 @@ def make_sticker(bot_username='iamselfvalue_bot', campaign='orange_jam'):
     # Add subtle lotus logo at top
     if os.path.exists(LOGO_PATH):
         logo = Image.open(LOGO_PATH).convert('RGBA')
-        logo_size = 90
+        logo_size = 45
         logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
         # Slightly fade to blend with background
         alpha = logo.split()[-1].point(lambda a: int(a * 0.85))
         logo.putalpha(alpha)
         lx = (TOTAL - logo_size) // 2
-        ly = 100
+        ly = 85
         img.paste(logo, (lx, ly), logo)
 
-    # Fonts
-    brand_font = load_font(FONT_SERIF, 48)
-    flavor_font = load_font(FONT_SANS_BOLD, 38)
-    sub_font = load_font(FONT_SANS, 28)
-    hint_font = load_font(FONT_SANS, 20)
+    # Fonts (scaled for the 45 mm sticker)
+    brand_font = load_font(FONT_SERIF, 26)
+    flavor_font = load_font(FONT_SANS_BOLD, 22)
+    tagline_font = load_font(FONT_SANS, 18)
+    sub_font = load_font(FONT_SANS, 16)
+    hint_font = load_font(FONT_SANS, 14)
 
     # Texts
-    brand_y = 200
+    brand_y = 145
     draw_text_center(draw, 'Я Есть Ценность', brand_y, brand_font, GOLD)
 
-    flavor_y = 260
+    flavor_y = 172
     draw_text_center(draw, 'Апельсиновый джем', flavor_y, flavor_font, WHITE)
 
-    tagline_y = 305
-    draw_text_center(draw, 'Твое наслаждение', tagline_y, sub_font, GOLD)
-
-    sub_y = 720
-    draw_text_center(draw, 'Раскрой своё внутреннее солнце', sub_y, sub_font, GOLD)
+    tagline_y = 195
+    draw_text_center(draw, 'Твое наслаждение', tagline_y, tagline_font, GOLD)
 
     # QR code in center
-    qr_size = 230
+    qr_size = 180
     qr = make_qr(url, qr_size)
     qx = (TOTAL - qr_size) // 2
-    qy = CENTER - (qr_size // 2) + 25
+    qy = CENTER - (qr_size // 2) + 10
     # white rounded backing
     backing = Image.new('RGBA', (qr_size + 20, qr_size + 20), WHITE)
     draw_back = ImageDraw.Draw(backing)
@@ -141,9 +146,12 @@ def make_sticker(bot_username='iamselfvalue_bot', campaign='orange_jam'):
     img.paste(backing, (qx - 10, qy - 10), backing)
     img.paste(qr, (qx, qy), qr)
 
-    # Hint below QR
-    hint_y = qy + qr_size + 18
+    # Call-to-action below QR
+    hint_y = qy + qr_size + 15
     draw_text_center(draw, 'Сканируй → медитация', hint_y, hint_font, WHITE, shadow=False)
+
+    sub_y = hint_y + 25
+    draw_text_center(draw, 'Раскрой своё внутреннее солнце', sub_y, sub_font, GOLD, shadow=False)
 
     # Save print file (with bleed, transparent outside cut circle)
     base = os.path.dirname(__file__)
