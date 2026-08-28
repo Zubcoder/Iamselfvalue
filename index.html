@@ -56,8 +56,8 @@
       --bg: var(--emerald);
       --bg-dark: var(--emerald-dark);
       --accent: var(--purple);
-      --card-bg: rgba(255, 255, 255, 0.07);
-      --card-bg-hover: rgba(255, 255, 255, 0.12);
+      --card-bg: rgba(16, 80, 64, 0.22);
+      --card-bg-hover: rgba(16, 80, 64, 0.30);
       --section-alt: rgba(0, 0, 0, 0.15);
       --radius: 20px;
       --shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
@@ -228,21 +228,23 @@
     .section-alt,
     .contact {
       padding: 90px 0;
-      background-image: url('section-bg.png');
+      background-image: linear-gradient(rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0.26)), url('section-bg-light-v1.png');
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
-      background-color: rgba(0, 0, 0, 0.38);
-      background-blend-mode: multiply;
+      background-repeat: no-repeat;
     }
 
     .section-alt {
-      /* same volumetric fabric background across all sections */
+      /* same light fabric background with subtle dark overlay across all sections */
     }
 
+    .section h2, .section h3, .section p, .section li, .contact h2, .contact p { text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35); }
+
     .section-header { text-align: center; max-width: 660px; margin: 0 auto 56px; }
-    .section-header h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); margin-bottom: 14px; }
-    .section-header p { color: var(--text-muted); }
+    .section-header h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); margin-bottom: 14px; text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35); }
+    .section-header p { color: var(--text-muted); text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35); }
+    #video .section-header h2 { color: var(--gold); }
 
     .about-inner {
       display: grid;
@@ -469,7 +471,7 @@
         <a href="#reviews">Отзывы</a>
         <a href="#contact">Контакты</a>
       </nav>
-      <div class="burger" onclick="document.getElementById('nav').classList.toggle('open')">
+      <div class="burger" aria-label="Открыть меню" role="button" tabindex="0">
         <span></span><span></span><span></span>
       </div>
     </div>
@@ -495,8 +497,8 @@
     <section class="section section-alt" id="video">
       <div class="container">
         <div class="section-header">
-          <h2>Визитка за 30 секунд</h2>
-          <p>Нежная нарезка о том, как я работаю и с чем могу помочь.</p>
+          <h2>Почувствуй мой подход за 30 секунд</h2>
+          <p>30 секунд о том, как бережно возвращаться к себе настоящей — со страхами, нежностью и надеждой.</p>
         </div>
         <div class="video-wrapper">
           <video controls playsinline autoplay muted loop poster="video/slide1.png" preload="metadata">
