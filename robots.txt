@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /video/
+
+Sitemap: https://iamselfvalue.ru/sitemap.xml

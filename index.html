@@ -8,6 +8,7 @@
   <meta name="keywords" content="коуч психолог, расстановщик, телесно ориентированный психотерапевт, мастер добаюкивания, женские круги, системные расстановки, синдром хорошей девочки, отношения близость, психолог онлайн" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://iamselfvalue.ru/" />
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="sitemap.xml" />
 
   <meta property="og:title" content="Я Есть Ценность — коуч-психолог, расстановщик" />
   <meta property="og:description" content="Индивидуальные сессии, системные расстановки, добаюкивание и телесная терапия для женщин. 300+ клиентов." />
@@ -404,6 +405,61 @@
     .contact h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); margin-bottom: 16px; }
     .contact p { color: var(--text-muted); max-width: 520px; margin: 0 auto 30px; }
 
+    .contact-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .contact-link {
+      padding: 10px 20px;
+      border-radius: 50px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      color: var(--text);
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+    .contact-link:hover { border-color: var(--gold); color: var(--gold); }
+
+    .lead-box {
+      max-width: 720px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: 48px 36px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .lead-box h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 14px; color: var(--gold); }
+    .lead-box > p { color: var(--text-muted); margin-bottom: 28px; }
+    .lead-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .lead-note { margin-top: 22px; font-size: 0.85rem; color: var(--text-muted); }
+    .lead-note a { color: var(--gold); text-decoration: underline; }
+
+    .packages {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .package-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+    .package-card h3 { font-size: 1.25rem; color: var(--gold); margin-bottom: 10px; }
+    .package-card p { color: var(--text-muted); margin-bottom: 18px; flex-grow: 1; }
+    .package-card .price { margin-top: auto; }
+
+    .section-cta { text-align: center; margin-top: 28px; }
+    .footer-links { margin-bottom: 12px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 18px; }
+    .footer-links a { color: var(--gold); font-size: 0.85rem; }
+
     footer {
       padding: 34px 0;
       background: rgba(0, 0, 0, 0.25);
@@ -469,6 +525,7 @@
         <a href="#reparenting">Добаюкавание</a>
         <a href="#body">Телесная терапия</a>
         <a href="#reviews">Отзывы</a>
+        <a href="blog.html">Блог</a>
         <a href="#contact">Контакты</a>
       </nav>
       <div class="burger" aria-label="Открыть меню" role="button" tabindex="0">
@@ -483,8 +540,8 @@
         <h1>Я Есть <span>Ценность</span></h1>
         <p>Пространство для женщин, которые устали быть «хорошими» и готовы встретиться с собой настоящей — через бережную психологию, расстановки и добаюкавание.</p>
         <div class="hero-actions">
-          <a href="https://t.me/iamselfvalue" class="btn btn-primary" target="_blank" rel="noopener">Написать в Telegram</a>
-          <a href="#services" class="btn btn-outline">Услуги</a>
+          <a href="https://t.me/iamselfvalue" class="btn btn-primary" target="_blank" rel="noopener">Записаться в Telegram</a>
+          <a href="#lead" class="btn btn-outline">Получить гайд</a>
         </div>
         <div class="hero-badges">
           <span class="hero-badge-pill">300+ клиентов</span>
@@ -523,6 +580,20 @@
         </div>
         <div class="about-photo">
           <img src="about-photo.jpg" alt="Екатерина Скулоченко" style="width:100%;max-width:340px;height:420px;object-fit:cover;border-radius:var(--radius);box-shadow:var(--shadow);" />
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="lead">
+      <div class="container">
+        <div class="lead-box">
+          <h2>Получить гайд «5 признаков синдрома хорошей девочки»</h2>
+          <p>PDF + короткая практика в Telegram. Бесплатно. Без спама.</p>
+          <div class="lead-actions">
+            <a href="https://t.me/iamselfvalue_bot?start=lead_goodgirl" class="btn btn-primary" target="_blank" rel="noopener">Получить в Telegram</a>
+            <a href="mailto:hello@iamselfvalue.ru?subject=Лид-магнит" class="btn btn-outline" target="_blank" rel="noopener">По email</a>
+          </div>
+          <p class="lead-note">Если у вас нет Telegram, напишите на <a href="mailto:hello@iamselfvalue.ru">hello@iamselfvalue.ru</a> — вышлю материал в ответном письме.</p>
         </div>
       </div>
     </section>
@@ -576,6 +647,39 @@
           </div>
         </div>
         <p style="text-align:center; margin-top:40px; color:var(--text-muted); font-size:0.9rem;">Стоимость формируется индивидуально под запрос — уточняйте в Telegram.</p>
+        <div class="section-cta">
+          <a href="https://t.me/iamselfvalue?text=Здравствуйте! Хочу записаться на консультацию." class="btn btn-primary" target="_blank" rel="noopener">Записаться на консультацию</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="packages">
+      <div class="container">
+        <div class="section-header">
+          <h2>Тарифы</h2>
+          <p>Примерная стоимость. Итоговая цена зависит от запроса и формата работы.</p>
+        </div>
+        <div class="packages">
+          <div class="package-card">
+            <h3>Знакомство</h3>
+            <p>Диагностическая 30-минутная встреча, чтобы понять запрос и подобрать формат.</p>
+            <div class="price">от 1 500 ₽</div>
+          </div>
+          <div class="package-card">
+            <h3>Разовая сессия</h3>
+            <p>Индивидуальная 60–90-минутная сессия по выбранному направлению.</p>
+            <div class="price">от 5 000 ₽</div>
+          </div>
+          <div class="package-card">
+            <h3>Курс 5 сессий</h3>
+            <p>Пакет для устойчивой работы: коучинг, расстановки или добаюкавание.</p>
+            <div class="price">от 22 000 ₽</div>
+          </div>
+        </div>
+        <p style="text-align:center; margin-top:40px; color:var(--text-muted); font-size:0.9rem;">Точная стоимость и рассрочка уточняются при записи.</p>
+        <div class="section-cta">
+          <a href="https://t.me/iamselfvalue?text=Здравствуйте! Хочу уточнить стоимость и записаться." class="btn btn-primary" target="_blank" rel="noopener">Уточнить стоимость в Telegram</a>
+        </div>
       </div>
     </section>
 
@@ -668,6 +772,11 @@
           <h2>Начните с одного шага</h2>
           <p>Если внутри откликается — напишите мне. Обсудим ваш запрос, подберём формат и договоримся о встрече.</p>
           <a href="https://t.me/iamselfvalue" class="btn btn-primary" target="_blank" rel="noopener">Написать в Telegram</a>
+          <div class="contact-links">
+            <a class="contact-link" href="https://t.me/iamselfvalue" target="_blank" rel="noopener">t.me/iamselfvalue</a>
+            <a class="contact-link" href="mailto:hello@iamselfvalue.ru">hello@iamselfvalue.ru</a>
+          </div>
+          <p class="lead-note" style="margin-top:18px;">WhatsApp / телефон добавим после уточнения данных.</p>
         </div>
       </div>
     </section>
@@ -675,6 +784,13 @@
 
   <footer>
     <div class="container">
+      <p class="footer-links">
+        <a href="/">Главная</a>
+        <a href="blog.html">Блог</a>
+        <a href="privacy.html">Политика конфиденциальности</a>
+        <a href="terms.html">Оферта</a>
+        <a href="consent.html">Согласие на обработку данных</a>
+      </p>
       <p>© 2026 Я Есть Ценность · <a href="https://t.me/iamselfvalue" target="_blank" rel="noopener">t.me/iamselfvalue</a></p>
     </div>
   </footer>
@@ -689,6 +805,18 @@
         });
       }
     })();
+
+    // === Аналитика: замените YOUR_YM_ID и YOUR_GA_ID на реальные счётчики ===
+    window.YM_ID = 'YOUR_YM_ID';
+    window.GA_ID  = 'YOUR_GA_ID';
+
+    document.querySelectorAll('a[href^="https://t.me/"], a[href^="mailto:"], a[href^="tel:"]').forEach(function(link) {
+      link.addEventListener('click', function() {
+        var goal = link.href.indexOf('t.me/') > -1 ? 'telegram_click' : (link.href.indexOf('mailto:') === 0 ? 'email_click' : 'phone_click');
+        if (typeof ym !== 'undefined' && window.YM_ID !== 'YOUR_YM_ID') ym(window.YM_ID, 'reachGoal', goal);
+        if (typeof gtag !== 'undefined' && window.GA_ID !== 'YOUR_GA_ID') gtag('event', goal);
+      });
+    });
   </script>
 </body>
 </html>
