@@ -1,5 +1,6 @@
 .env
 bot/.data/
+bot/.venv/
 __pycache__/
 *.pyc
 *.db
