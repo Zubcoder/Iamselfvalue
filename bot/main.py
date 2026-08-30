@@ -56,11 +56,11 @@ LEAD_PDF_FILE = os.getenv('LEAD_PDF_FILE', str(Path(__file__).parent / 'media' /
 LEAD_AUDIO_FILE = os.getenv('LEAD_AUDIO_FILE', str(Path(__file__).parent / 'media' / 'lead_goodgirl.mp3'))
 LEAD_WELCOME_TEXT = os.getenv(
     'LEAD_WELCOME_TEXT',
-    'Здравствуйте, {name}.\n\n'
-    'Я Екатерина Скулоченко. Рада, что вы здесь.\n\n'
-    'Сейчас пришлю гайд «5 признаков синдрома «хорошей девочки»» — '
-    'не про ярлыки, а про бережный взгляд на себя. Если что-то откликнется, '
-    'напишите — и мы вместе разберём, как вернуться к себе настоящей.'
+    'Здравствуйте. Меня зовут Екатерина. Рада, что вы здесь.\n\n'
+    'Сейчас я пришлю вам небольшой гайд «5 признаков синдрома «хорошей девочки»». '
+    'Это не про ярлыки — это про то, чтобы внимательно присмотреться к себе. '
+    'Если что-то откликнется внутри, напишите мне — и мы вместе разберёмся, '
+    'как вернуться к себе настоящей.'
 )
 LEAD_CONTACT_REQUEST_TEXT = os.getenv(
     'LEAD_CONTACT_REQUEST_TEXT',
@@ -230,11 +230,18 @@ async def skip_contact(message: Message):
     )
 
 
+@router.message(Command('myid'))
+async def cmd_myid(message: Message):
+    user = message.from_user
+    await message.answer(f'Ваш Telegram ID: <code>{user.id}</code>', parse_mode=ParseMode.HTML)
+
+
 @router.message(Command('help'))
 async def cmd_help(message: Message):
     await message.answer(
         'Команды:\n'
         '/start — получить медитацию или гайд\n'
+        '/myid — узнать свой Telegram ID\n'
         '/stats — подписчики (админ)\n'
         '/export — выгрузить контакты (админ)\n'
         '/broadcast — рассылка (админ)\n'
