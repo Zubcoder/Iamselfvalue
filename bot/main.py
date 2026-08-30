@@ -21,7 +21,7 @@ from pathlib import Path
 from aiogram import Bot, Dispatcher, F, Router, types
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandObject, CommandStart
-from aiogram.types import FSInputFile, Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import BufferedInputFile, FSInputFile, Message, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from dotenv import load_dotenv
 
@@ -30,8 +30,10 @@ load_dotenv(Path(__file__).with_name('.env'))
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 ADMIN_IDS = {int(x.strip()) for x in os.getenv('ADMIN_IDS', '').split(',') if x.strip()}
 MEDITATION_FILE = os.getenv('MEDITATION_FILE', str(Path(__file__).parent / 'media' / 'meditation.mp3'))
-WELCOME_TEXT = os.getenv(
-    'WELCOME_TEXT',
+
+# Orange-jam / meditation flow
+JAM_WELCOME_TEXT = os.getenv(
+    'JAM_WELCOME_TEXT',
     (
         'Добро пожаловать 🍊\n\n'
         'Положите ложечку апельсинового джема на язык, закройте глаза и позвольте себе '
@@ -39,15 +41,39 @@ WELCOME_TEXT = os.getenv(
         'Ниже — ваша медитация.'
     ),
 )
-CONTACT_REQUEST_TEXT = (
-    'Если хотите, оставьте номер телефона — я напишу, когда появятся новые '
-    'вкусы и продукты.'
+JAM_CONTACT_REQUEST_TEXT = os.getenv(
+    'JAM_CONTACT_REQUEST_TEXT',
+    'Если хотите, оставьте номер телефона — я напишу, когда появятся новые вкусы и продукты.'
 )
-THANKS_CONTACT_TEXT = 'Спасибо! Контакт сохранён. До встречи ✨'
-NO_MEDITATION_TEXT = (
-    'Аудио-версия медитации пока загружается. Как только будет готова — '
-    'пришлю первым делом.'
+JAM_NO_MEDITATION_TEXT = os.getenv(
+    'JAM_NO_MEDITATION_TEXT',
+    'Аудио-версия медитации пока загружается. Как только будет готова — пришлю первым делом.'
 )
+
+# Lead-magnet flow (the site uses ?start=lead_goodgirl)
+LEAD_PDF_FILE = os.getenv('LEAD_PDF_FILE', str(Path(__file__).parent / 'media' / 'lead_goodgirl.pdf'))
+LEAD_AUDIO_FILE = os.getenv('LEAD_AUDIO_FILE', str(Path(__file__).parent / 'media' / 'lead_goodgirl.mp3'))
+LEAD_WELCOME_TEXT = os.getenv(
+    'LEAD_WELCOME_TEXT',
+    'Здравствуйте, {name}.\n\n'
+    'Я Екатерина Скулоченко. Рада, что вы здесь.\n\n'
+    'Сейчас пришлю гайд «5 признаков синдрома «хорошей девочки»» — '
+    'не про ярлыки, а про бережный взгляд на себя. Если что-то откликнется, '
+    'напишите — и мы вместе разберём, как вернуться к себе настоящей.'
+)
+LEAD_CONTACT_REQUEST_TEXT = os.getenv(
+    'LEAD_CONTACT_REQUEST_TEXT',
+    'Если хотите, я напишу вам, когда появятся новые материалы или места на сессии. '
+    'Оставьте номер телефона или нажмите «Пропустить».'
+)
+LEAD_THANKS_CONTACT_TEXT = os.getenv('LEAD_THANKS_CONTACT_TEXT', 'Спасибо! Контакт сохранён. До встречи ✨')
+LEAD_NO_FILE_TEXT = os.getenv(
+    'LEAD_NO_FILE_TEXT',
+    'Гайд в финальной подготовке — как только будет готов, я отправлю его первым делом.'
+)
+
+THANKS_CONTACT_TEXT = LEAD_THANKS_CONTACT_TEXT
+NO_MEDITATION_TEXT = JAM_NO_MEDITATION_TEXT
 
 DB_PATH = Path(__file__).parent / '.data' / 'subscribers.db'
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -121,17 +147,8 @@ def contact_keyboard():
     return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
 
-@router.message(CommandStart())
-async def cmd_start(message: Message, command: CommandObject):
-    user = message.from_user
-    campaign = command.args if command.args else 'direct'
-
-    await asyncio.to_thread(add_or_update_subscriber, user, campaign, None)
-
-    await message.answer(
-        WELCOME_TEXT,
-        parse_mode=ParseMode.HTML,
-    )
+async def send_meditation(message: Message):
+    await message.answer(JAM_WELCOME_TEXT, parse_mode=ParseMode.HTML)
 
     meditation_path = Path(MEDITATION_FILE)
     if meditation_path.is_file():
@@ -142,10 +159,48 @@ async def cmd_start(message: Message, command: CommandObject):
             caption='🍊 Апельсиновый джем + медитация',
         )
     else:
-        await message.answer(NO_MEDITATION_TEXT)
+        await message.answer(JAM_NO_MEDITATION_TEXT)
+
+
+async def send_lead_magnet(message: Message, user: types.User):
+    name = user.first_name or 'друг'
+    await message.answer(LEAD_WELCOME_TEXT.replace('{name}', name), parse_mode=ParseMode.HTML)
+
+    pdf_path = Path(LEAD_PDF_FILE)
+    if pdf_path.is_file():
+        await message.answer_document(
+            document=FSInputFile(pdf_path),
+            caption='Ваш гайд — во вложении.',
+        )
+    else:
+        await message.answer(LEAD_NO_FILE_TEXT)
+
+    audio_path = Path(LEAD_AUDIO_FILE)
+    if audio_path.is_file():
+        await message.answer_audio(
+            audio=FSInputFile(audio_path),
+            title='Приветствие от Екатерины',
+            performer='Я Есть Ценность',
+            caption='Короткое аудио-приветствие.',
+        )
+
+
+@router.message(CommandStart())
+async def cmd_start(message: Message, command: CommandObject):
+    user = message.from_user
+    campaign = command.args if command.args else 'direct'
+
+    await asyncio.to_thread(add_or_update_subscriber, user, campaign, None)
+
+    if campaign.startswith('lead_') or campaign == 'lead':
+        await send_lead_magnet(message, user)
+        contact_text = LEAD_CONTACT_REQUEST_TEXT
+    else:
+        await send_meditation(message)
+        contact_text = JAM_CONTACT_REQUEST_TEXT
 
     await message.answer(
-        CONTACT_REQUEST_TEXT,
+        contact_text,
         reply_markup=contact_keyboard(),
     )
 
@@ -154,7 +209,12 @@ async def cmd_start(message: Message, command: CommandObject):
 async def on_contact(message: Message):
     user = message.from_user
     phone = message.contact.phone_number if message.contact else None
-    await asyncio.to_thread(add_or_update_subscriber, user, 'direct', phone)
+    campaign = 'direct'
+    with _db() as conn:
+        row = conn.execute('SELECT campaign FROM subscribers WHERE user_id = ?', (user.id,)).fetchone()
+        if row and row['campaign']:
+            campaign = row['campaign']
+    await asyncio.to_thread(add_or_update_subscriber, user, campaign, phone)
     await message.answer(
         THANKS_CONTACT_TEXT,
         reply_markup=types.ReplyKeyboardRemove(),
@@ -173,7 +233,10 @@ async def skip_contact(message: Message):
 async def cmd_help(message: Message):
     await message.answer(
         'Команды:\n'
-        '/start — получить медитацию\n'
+        '/start — получить медитацию или гайд\n'
+        '/stats — подписчики (админ)\n'
+        '/export — выгрузить контакты (админ)\n'
+        '/broadcast — рассылка (админ)\n'
         '/help — справка',
     )
 
@@ -210,6 +273,32 @@ async def cmd_broadcast(message: Message, command: CommandObject):
         except Exception:
             failed += 1
     await message.answer(f'Разослано: {sent}, ошибок: {failed}')
+
+
+@router.message(Command('export'))
+async def cmd_export(message: Message):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+
+    import csv
+    import io
+
+    with _db() as conn:
+        rows = conn.execute(
+            'SELECT user_id, username, first_name, last_name, phone, campaign, joined_at '
+            'FROM subscribers ORDER BY joined_at DESC'
+        ).fetchall()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['user_id', 'username', 'first_name', 'last_name', 'phone', 'campaign', 'joined_at'])
+    writer.writerows(rows)
+    output.seek(0)
+
+    await message.answer_document(
+        document=BufferedInputFile(output.getvalue().encode('utf-8'), 'subscribers.csv'),
+        caption='База контактов',
+    )
 
 
 async def main() -> None:
