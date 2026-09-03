@@ -53,7 +53,7 @@ JAM_NO_MEDITATION_TEXT = os.getenv(
 
 # Lead-magnet flow (the site uses ?start=lead_goodgirl)
 LEAD_PDF_FILE = os.getenv('LEAD_PDF_FILE', str(Path(__file__).parent / 'media' / 'lead_goodgirl.pdf'))
-LEAD_AUDIO_FILE = os.getenv('LEAD_AUDIO_FILE', str(Path(__file__).parent / 'media' / 'lead_goodgirl.mp3'))
+LEAD_VIDEO_NOTE_FILE = os.getenv('LEAD_VIDEO_NOTE_FILE', str(Path(__file__).parent / 'media' / 'lead_goodgirl_video.mp4'))
 LEAD_WELCOME_TEXT = os.getenv(
     'LEAD_WELCOME_TEXT',
     'Здравствуйте. Меня зовут Екатерина. Рада, что вы здесь.\n\n'
@@ -167,6 +167,13 @@ async def send_lead_magnet(message: Message, user: types.User):
     name = user.first_name or 'друг'
     await message.answer(LEAD_WELCOME_TEXT.replace('{name}', name), parse_mode=ParseMode.HTML)
 
+    video_note_path = Path(LEAD_VIDEO_NOTE_FILE)
+    if video_note_path.is_file():
+        await message.answer_video_note(
+            video_note=FSInputFile(video_note_path),
+            length=400,
+        )
+
     pdf_path = Path(LEAD_PDF_FILE)
     if pdf_path.is_file():
         await message.answer_document(
@@ -175,15 +182,6 @@ async def send_lead_magnet(message: Message, user: types.User):
         )
     else:
         await message.answer(LEAD_NO_FILE_TEXT)
-
-    audio_path = Path(LEAD_AUDIO_FILE)
-    if audio_path.is_file():
-        await message.answer_audio(
-            audio=FSInputFile(audio_path),
-            title='Приветствие от Екатерины',
-            performer='Я Есть Ценность',
-            caption='Короткое аудио-приветствие.',
-        )
 
 
 @router.message(CommandStart())
