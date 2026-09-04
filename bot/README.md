@@ -1,15 +1,18 @@
-# Telegram-бот «Я Есть Ценность» для медитации к джему
+# Telegram-бот «Я Есть Ценность»
 
-Бот получает пользователя по QR-коду на банке с апельсиновым джемом, выдаёт медитацию и сохраняет контакты для рассылок о новых продуктах.
+Бот работает с сайта `iamselfvalue.ru`: выдаёт лид-магнит (PDF-гайд + видео-приветствие), собирает контакты и приглашает в Telegram-канал.
 
 ## Что умеет
 
-- Приветствие `/start` с `?start=orange_jam` — персонализированная кампания.
-- Отправка аудио-медитации (`media/meditation.mp3`).
-- Сбор телефона через кнопку «Поделиться номером».
-- База подписчиков в SQLite.
-- Рассылка админам: `/broadcast текст`.
-- Статистика: `/stats`.
+- Кампания `/start lead_goodgirl` — лид-магнит с сайта.
+- Видео-кружок + PDF-гайд (`media/lead_goodgirl_video.mp4`, `media/lead_goodgirl.pdf`).
+- Автоматический сбор Telegram ID, username, имени и телефона.
+- Приглашение подписаться на канал `@iamselfvalue`.
+- Автоматический follow-up через 48 часов.
+- Кампания `/start orange_jam` — медитация к апельсиновому джему.
+- Админ-команды: `/stats`, `/export`, `/broadcast`.
+
+База подписчиков хранится в SQLite (`bot/.data/subscribers.db`).
 
 ## Запуск локально
 
@@ -27,6 +30,21 @@ python main.py
 2. Отправьте `/newbot`, придумайте имя и юзернейм (например, `@selfvalue_bot`).
 3. Скопируйте токен и вставьте в `.env` как `BOT_TOKEN`.
 4. Чтобы получить `ADMIN_IDS`, напишите [@userinfobot](https://t.me/userinfobot) и скопируйте цифру ID.
+
+## Запуск на VPS (long polling + systemd)
+
+Подходит для бюджета ~500 ₽/мес и российских провайдеров (Beget, Timeweb, RuVDS, Reg.ru, Selectel).
+
+```bash
+cd /opt
+git clone https://github.com/Zubcoder/Iamselfvalue.git
+cd Iamselfvalue
+sudo bash bot/deploy.sh
+# затем заполните /opt/iamselfvalue/bot/.env
+sudo systemctl restart iamselfvalue-bot
+```
+
+Подробная инструкция: [VPS-SETUP.md](VPS-SETUP.md).
 
 ## Запуск в облаке (Fly.io)
 
