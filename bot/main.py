@@ -413,6 +413,24 @@ async def keep_alive():
         await asyncio.sleep(3600)
 
 
+async def start_health_server(host: str, port: int):
+    from aiohttp import web
+
+    async def health(request):
+        return web.Response(text='ok')
+
+    app = web.Application()
+    app.router.add_get('/', health)
+    app.router.add_get('/health', health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host, port)
+    await site.start()
+    print(f'Health server started on {host}:{port}', flush=True)
+    while True:
+        await asyncio.sleep(3600)
+
+
 async def main() -> None:
     if not BOT_TOKEN:
         raise RuntimeError('BOT_TOKEN is not set. Copy .env.example to .env and fill it.')
@@ -456,7 +474,8 @@ async def main() -> None:
         print(f'Webhook server started on {webapp_host}:{webapp_port}')
         await asyncio.gather(keep_alive(), scheduler(bot))
     else:
-        await asyncio.gather(dp.start_polling(bot), scheduler(bot))
+        health_task = asyncio.create_task(start_health_server(webapp_host, webapp_port))
+        await asyncio.gather(dp.start_polling(bot), scheduler(bot), health_task)
 
 
 if __name__ == '__main__':
