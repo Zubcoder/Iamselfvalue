@@ -188,7 +188,7 @@
       justify-content: center;
       text-align: center;
       padding: 140px 0 100px;
-      background: url('hero-bg.png') center/cover no-repeat;
+      background: url('hero-bg.webp') center/cover no-repeat;
       position: relative;
       overflow: hidden;
     }
@@ -240,7 +240,7 @@
     .section-alt,
     .contact {
       padding: 90px 0;
-      background-image: linear-gradient(rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0.26)), url('section-bg-light-v1.png');
+      background-image: linear-gradient(rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0.26)), url('section-bg-light-v1.webp');
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
@@ -481,6 +481,42 @@
 
     footer a { color: var(--gold); font-weight: 500; }
 
+    .sticky-cta {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 100;
+      background: rgba(16, 80, 64, 0.96);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(255,255,255,0.12);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      transform: translateY(100%);
+      transition: transform 0.35s ease;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.25);
+    }
+    .sticky-cta.visible { transform: translateY(0); }
+    .sticky-cta.hidden-user { display: none; }
+    .sticky-cta p { font-size: 0.9rem; line-height: 1.3; margin: 0; }
+    .sticky-cta .btn { padding: 10px 16px; font-size: 0.9rem; white-space: nowrap; }
+    .sticky-cta .close-cta {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    @media (min-width: 601px) {
+      .sticky-cta { display: none; }
+    }
+
     @media (max-width: 920px) {
       .hero-inner,
       .about-inner,
@@ -525,7 +561,10 @@
   <header>
     <div class="container header-inner">
       <a href="#" class="logo">
-        <img src="logo-icon.png" alt="Логотип Я Есть Ценность" />
+        <picture>
+          <source srcset="logo-icon.webp" type="image/webp">
+          <img src="logo-icon.png" alt="Логотип Я Есть Ценность" width="256" height="256" />
+        </picture>
         <span>Я Есть Ценность</span>
       </a>
       <nav id="nav">
@@ -576,7 +615,10 @@
           </div>
         </div>
         <div class="about-photo">
-          <img src="about-photo.jpg" alt="Екатерина Скулоченко" style="width:100%;max-width:340px;height:420px;object-fit:cover;border-radius:var(--radius);box-shadow:var(--shadow);" />
+          <picture>
+            <source srcset="about-photo.webp" type="image/webp">
+            <img src="about-photo.jpg" alt="Екатерина Скулоченко" loading="lazy" style="width:100%;max-width:340px;height:420px;object-fit:cover;border-radius:var(--radius);box-shadow:var(--shadow);" />
+          </picture>
         </div>
       </div>
     </section>
@@ -665,7 +707,73 @@
       </div>
     </section>
 
-    <section class="section" id="packages">
+    <section class="section" id="constellations">
+      <div class="container detail-grid">
+        <div class="detail-content">
+          <h3>Системные расстановки</h3>
+          <p>Расстановки помогают увидеть скрытые родовые сценарии, которые влияют на отношения, здоровье, финансы и самооценку. Через поле мы выстраиваем порядок и возвращаем каждому члену системы своё достойное место.</p>
+          <p>Я провожу индивидуальные и групповые расстановки. Работаем безопасно и бережно — вы смотрите на систему со стороны, не переживая её заново.</p>
+          <ul class="feature-list">
+            <li>Отношения и семейная динамика</li>
+            <li>Финансы и успех</li>
+            <li>Здоровье и тяжёлые судьбы</li>
+            <li>Поиск места в жизни</li>
+          </ul>
+        </div>
+        <div class="detail-image">
+          <picture>
+            <source srcset="detail-constellations.webp" type="image/webp">
+            <img src="detail-constellations.png" alt="Системные расстановки" loading="lazy" />
+          </picture>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="reparenting">
+      <div class="container detail-grid">
+        <div class="detail-content">
+          <h3>Добаюкавание</h3>
+          <p>Добаюкавание — это процесс возвращения себе того, чего не хватило в детстве: тёплой заботы, защиты, принятия и разрешения быть собой.</p>
+          <p>Мы работаем с внутренним ребёнком, снимая чувство вины, стыда и страха. Постепенно вы учитесь заботиться о себе так, как хотели бы, чтобы заботились о вас.</p>
+          <ul class="feature-list">
+            <li>Синдром «хорошей девочки»</li>
+            <li>Тревога и неуверенность</li>
+            <li>Сложности с близостью</li>
+            <li>Перфекционизм и самокритика</li>
+          </ul>
+        </div>
+        <div class="detail-image">
+          <picture>
+            <source srcset="detail-reparenting.webp" type="image/webp">
+            <img src="detail-reparenting.png" alt="Добаюкавание" loading="lazy" />
+          </picture>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="body">
+      <div class="container detail-grid">
+        <div class="detail-content">
+          <h3>Телесно-ориентированная терапия</h3>
+          <p>Тело помнит всё. Тревога, обида, страх — часто живут в мышцах, дыхании, зажимах. Телесная терапия помогает высвободить то, что не получается выразить словами.</p>
+          <p>Мы используем дыхание, мягкое движение, внимание к ощущениям и проживание эмоций в безопасном темпе. Это путь к естественной жизненной силе.</p>
+          <ul class="feature-list">
+            <li>Хроническая усталость и выгорание</li>
+            <li>Панические атаки и тревога</li>
+            <li>Боли и зажимы в теле</li>
+            <li>Разъединение с собой</li>
+          </ul>
+        </div>
+        <div class="detail-image">
+          <picture>
+            <source srcset="detail-body.webp" type="image/webp">
+            <img src="detail-body.png" alt="Телесная терапия" loading="lazy" />
+          </picture>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="packages">
       <div class="container">
         <div class="section-header">
           <h2>Тарифы</h2>
@@ -695,64 +803,7 @@
       </div>
     </section>
 
-    <section class="section" id="constellations">
-      <div class="container detail-grid">
-        <div class="detail-content">
-          <h3>Системные расстановки</h3>
-          <p>Расстановки помогают увидеть скрытые родовые сценарии, которые влияют на отношения, здоровье, финансы и самооценку. Через поле мы выстраиваем порядок и возвращаем каждому члену системы своё достойное место.</p>
-          <p>Я провожу индивидуальные и групповые расстановки. Работаем безопасно и бережно — вы смотрите на систему со стороны, не переживая её заново.</p>
-          <ul class="feature-list">
-            <li>Отношения и семейная динамика</li>
-            <li>Финансы и успех</li>
-            <li>Здоровье и тяжёлые судьбы</li>
-            <li>Поиск места в жизни</li>
-          </ul>
-        </div>
-        <div class="detail-image">
-          <img src="detail-constellations.png" alt="Системные расстановки" />
-        </div>
-      </div>
-    </section>
-
-    <section class="section section-alt" id="reparenting">
-      <div class="container detail-grid">
-        <div class="detail-content">
-          <h3>Добаюкавание</h3>
-          <p>Добаюкавание — это процесс возвращения себе того, чего не хватило в детстве: тёплой заботы, защиты, принятия и разрешения быть собой.</p>
-          <p>Мы работаем с внутренним ребёнком, снимая чувство вины, стыда и страха. Постепенно вы учитесь заботиться о себе так, как хотели бы, чтобы заботились о вас.</p>
-          <ul class="feature-list">
-            <li>Синдром «хорошей девочки»</li>
-            <li>Тревога и неуверенность</li>
-            <li>Сложности с близостью</li>
-            <li>Перфекционизм и самокритика</li>
-          </ul>
-        </div>
-        <div class="detail-image">
-          <img src="detail-reparenting.png" alt="Добаюкавание" />
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="body">
-      <div class="container detail-grid">
-        <div class="detail-content">
-          <h3>Телесно-ориентированная терапия</h3>
-          <p>Тело помнит всё. Тревога, обида, страх — часто живут в мышцах, дыхании, зажимах. Телесная терапия помогает высвободить то, что не получается выразить словами.</p>
-          <p>Мы используем дыхание, мягкое движение, внимание к ощущениям и проживание эмоций в безопасном темпе. Это путь к естественной жизненной силе.</p>
-          <ul class="feature-list">
-            <li>Хроническая усталость и выгорание</li>
-            <li>Панические атаки и тревога</li>
-            <li>Боли и зажимы в теле</li>
-            <li>Разъединение с собой</li>
-          </ul>
-        </div>
-        <div class="detail-image">
-          <img src="detail-body.png" alt="Телесная терапия" />
-        </div>
-      </div>
-    </section>
-
-    <section class="section section-alt" id="reviews">
+    <section class="section" id="reviews">
       <div class="container">
         <div class="section-header">
           <h2>Отзывы</h2>
@@ -807,6 +858,12 @@
     </div>
   </footer>
 
+  <div class="sticky-cta" id="stickyCta" aria-label="Предложение получить гайд">
+    <button class="close-cta" aria-label="Закрыть" onclick="document.getElementById('stickyCta').classList.add('hidden-user');">×</button>
+    <p><strong>Бесплатный гайд</strong><br>«5 признаков синдрома хорошей девочки»</p>
+    <a href="https://t.me/iamselfvalue_bot?start=lead_goodgirl" class="btn btn-primary" target="_blank" rel="noopener">Получить</a>
+  </div>
+
   <script>
     (function() {
       const nav = document.getElementById('nav');
@@ -829,6 +886,24 @@
         if (typeof gtag !== 'undefined' && window.GA_ID !== 'YOUR_GA_ID') gtag('event', goal);
       });
     });
+
+    // === Липкая плашка «Получить гайд» на мобильных ===
+    (function() {
+      const sticky = document.getElementById('stickyCta');
+      if (!sticky) return;
+      const hero = document.querySelector('.hero');
+      let shown = false;
+      function check() {
+        if (shown || sticky.classList.contains('hidden-user')) return;
+        const heroBottom = hero ? hero.getBoundingClientRect().bottom : 0;
+        if (heroBottom < 0) {
+          sticky.classList.add('visible');
+          shown = true;
+        }
+      }
+      window.addEventListener('scroll', check, { passive: true });
+      check();
+    })();
   </script>
 </body>
 </html>

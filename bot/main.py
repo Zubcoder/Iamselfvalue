@@ -88,6 +88,8 @@ LEAD_FOLLOWUP_TEXT = os.getenv(
 )
 LEAD_FOLLOWUP_HOURS = int(os.getenv('LEAD_FOLLOWUP_HOURS', '48'))
 CHANNEL_USERNAME = os.getenv('CHANNEL_USERNAME', 'https://t.me/iamselfvalue')
+LEAD_CHANNEL_ID_RAW = os.getenv('LEAD_CHANNEL_ID', '').strip()
+LEAD_CHANNEL_ID = int(LEAD_CHANNEL_ID_RAW) if LEAD_CHANNEL_ID_RAW else None
 
 THANKS_CONTACT_TEXT = LEAD_THANKS_CONTACT_TEXT
 NO_MEDITATION_TEXT = JAM_NO_MEDITATION_TEXT
@@ -288,6 +290,25 @@ async def on_contact(message: Message):
     )
     if campaign.startswith('lead_'):
         await send_channel_invite(message)
+        await _forward_lead_to_channel(message, user, phone, campaign)
+
+
+async def _forward_lead_to_channel(message: Message, user, phone, campaign):
+    if not LEAD_CHANNEL_ID:
+        return
+    try:
+        username = f'@{user.username}' if user.username else 'нет username'
+        text = (
+            f'📩 Новый контакт из бота\n'
+            f'Имя: {user.full_name}\n'
+            f'Username: {username}\n'
+            f'Телефон: {phone or "не указан"}\n'
+            f'Кампания: {campaign}'
+        )
+        await message.bot.send_message(LEAD_CHANNEL_ID, text)
+    except Exception:
+        # Channel may be inaccessible or not configured; do not break the flow.
+        pass
 
 
 @router.message(F.text == '🔕 Пропустить')
@@ -385,6 +406,24 @@ async def cmd_export(message: Message):
     )
 
 
+@router.message(F.forward_origin | F.forward_from_chat)
+async def on_forwarded_channel(message: Message):
+    """Admin helper: reveals the numeric chat_id of a forwarded channel."""
+    if message.from_user.id not in ADMIN_IDS:
+        return
+    chat = None
+    origin = message.forward_origin
+    if origin:
+        chat = getattr(origin, 'chat', None)
+    if not chat:
+        chat = message.forward_from_chat
+    if chat:
+        await message.answer(
+            f'ID канала: <code>{chat.id}</code>\nНазвание: {chat.title or "—"}',
+            parse_mode=ParseMode.HTML,
+        )
+
+
 async def scheduler(bot: Bot):
     """Send scheduled follow-up messages."""
     print('Scheduler started', flush=True)
@@ -451,7 +490,7 @@ async def main() -> None:
     webapp_host = os.getenv('WEBAPP_HOST', '0.0.0.0')
     webapp_port = int(os.getenv('WEBAPP_PORT', '8080'))
 
-    await bot.delete_webhook(drop_pending_updates=True)
+    await bot.delete_webhook(drop_pending_updates=False)
     print('Bot started', flush=True)
 
     if webhook_url:
