@@ -20,6 +20,8 @@ from pathlib import Path
 
 from aiogram import Bot, Dispatcher, F, Router, types
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.client.telegram import TelegramAPIServer
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import BufferedInputFile, FSInputFile, Message, ReplyKeyboardMarkup, KeyboardButton
@@ -30,6 +32,7 @@ load_dotenv(Path(__file__).with_name('.env'))
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 ADMIN_IDS = {int(x.strip()) for x in os.getenv('ADMIN_IDS', '').split(',') if x.strip()}
+TELEGRAM_API_BASE_URL = os.getenv('TELEGRAM_API_BASE_URL', '')
 MEDITATION_FILE = os.getenv('MEDITATION_FILE', str(Path(__file__).parent / 'media' / 'meditation.mp3'))
 
 # Orange-jam / meditation flow
@@ -217,9 +220,6 @@ async def send_meditation(message: Message):
 
 
 async def send_lead_magnet(message: Message, user: types.User):
-    name = user.first_name or 'друг'
-    await message.answer(LEAD_WELCOME_TEXT.replace('{name}', name), parse_mode=ParseMode.HTML)
-
     video_note_path = Path(LEAD_VIDEO_NOTE_FILE)
     if video_note_path.is_file():
         await message.answer_video_note(
@@ -240,7 +240,7 @@ async def send_lead_magnet(message: Message, user: types.User):
 @router.message(CommandStart())
 async def cmd_start(message: Message, command: CommandObject):
     user = message.from_user
-    campaign = command.args if command.args else 'direct'
+    campaign = command.args if command.args else 'lead_goodgirl'
 
     await asyncio.to_thread(add_or_update_subscriber, user, campaign, None)
 
@@ -410,13 +410,40 @@ async def keep_alive():
         await asyncio.sleep(3600)
 
 
+async def start_health_server(host: str, port: int):
+    from aiohttp import web
+
+    async def health(request):
+        return web.Response(text='ok')
+
+    app = web.Application()
+    app.router.add_get('/', health)
+    app.router.add_get('/health', health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host, port)
+    await site.start()
+    print(f'Health server started on {host}:{port}', flush=True)
+    while True:
+        await asyncio.sleep(3600)
+
+
 async def main() -> None:
     if not BOT_TOKEN:
         raise RuntimeError('BOT_TOKEN is not set. Copy .env.example to .env and fill it.')
 
     await asyncio.to_thread(init_db)
 
-    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    api = None
+    if TELEGRAM_API_BASE_URL:
+        base_url = TELEGRAM_API_BASE_URL.rstrip('/')
+        api = TelegramAPIServer(
+            base=f'{base_url}/bot{{token}}/{{method}}',
+            file=f'{base_url}/file/bot{{token}}/{{path}}',
+            is_local=False,
+        )
+    session = AiohttpSession(api=api) if api else AiohttpSession()
+    bot = Bot(token=BOT_TOKEN, session=session, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
     dp.include_router(router)
 
@@ -444,7 +471,8 @@ async def main() -> None:
         print(f'Webhook server started on {webapp_host}:{webapp_port}')
         await asyncio.gather(keep_alive(), scheduler(bot))
     else:
-        await asyncio.gather(dp.start_polling(bot), scheduler(bot))
+        health_task = asyncio.create_task(start_health_server(webapp_host, webapp_port))
+        await asyncio.gather(dp.start_polling(bot), scheduler(bot), health_task)
 
 
 if __name__ == '__main__':
