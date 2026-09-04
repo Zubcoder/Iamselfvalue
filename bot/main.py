@@ -406,12 +406,17 @@ async def cmd_export(message: Message):
     )
 
 
-@router.message(F.forward_from_chat)
+@router.message(F.forward_origin | F.forward_from_chat)
 async def on_forwarded_channel(message: Message):
     """Admin helper: reveals the numeric chat_id of a forwarded channel."""
     if message.from_user.id not in ADMIN_IDS:
         return
-    chat = message.forward_from_chat
+    chat = None
+    origin = message.forward_origin
+    if origin:
+        chat = getattr(origin, 'chat', None)
+    if not chat:
+        chat = message.forward_from_chat
     if chat:
         await message.answer(
             f'ID канала: <code>{chat.id}</code>\nНазвание: {chat.title or "—"}',
