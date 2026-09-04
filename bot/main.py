@@ -482,7 +482,11 @@ async def main() -> None:
             is_local=False,
         )
     session = AiohttpSession(api=api) if api else AiohttpSession()
-    bot = Bot(token=BOT_TOKEN, session=session, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = Bot(
+        token=BOT_TOKEN,
+        session=session,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML, protect_content=True),
+    )
     dp = Dispatcher()
     dp.include_router(router)
 
