@@ -243,7 +243,7 @@ async def send_lead_magnet(message: Message, user: types.User):
 @router.message(CommandStart())
 async def cmd_start(message: Message, command: CommandObject):
     user = message.from_user
-    campaign = command.args if command.args else 'direct'
+    campaign = command.args if command.args else 'lead_goodgirl'
 
     await asyncio.to_thread(add_or_update_subscriber, user, campaign, None)
 
