@@ -1,5 +1,5 @@
 app = 'iamselfvalue-bot'
-primary_region = 'waw'
+primary_region = 'fra'
 
 [build]
   dockerfile = 'Dockerfile'
@@ -27,4 +27,4 @@ kill_timeout = '30s'
 
 [[vm]]
   size = 'shared-cpu-1x'
-  memory = '256mb'
+  memory = '512mb'
