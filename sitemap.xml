@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://iamselfvalue.ru/</loc>
-    <lastmod>2026-08-30</lastmod>
+    <lastmod>2026-09-03</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
@@ -22,7 +22,12 @@
   </url>
   <url>
     <loc>https://iamselfvalue.ru/blog.html</loc>
-    <lastmod>2026-08-30</lastmod>
+    <lastmod>2026-09-03</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://iamselfvalue.ru/products.html</loc>
+    <lastmod>2026-09-03</lastmod>
     <priority>0.8</priority>
   </url>
 </urlset>
