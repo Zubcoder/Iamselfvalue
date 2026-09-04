@@ -335,15 +335,20 @@ async def cmd_myid(message: Message):
 
 @router.message(Command('help'))
 async def cmd_help(message: Message):
-    await message.answer(
+    text = (
         'Команды:\n'
         '/start — получить медитацию или гайд\n'
         '/myid — узнать свой Telegram ID\n'
-        '/stats — подписчики (админ)\n'
-        '/export — выгрузить контакты (админ)\n'
-        '/broadcast — рассылка (админ)\n'
-        '/help — справка',
+        '/help — справка'
     )
+    if message.from_user.id in ADMIN_IDS:
+        text += (
+            '\n\nАдмин-команды:\n'
+            '/stats — подписчики\n'
+            '/export — выгрузить контакты\n'
+            '/broadcast — рассылка'
+        )
+    await message.answer(text)
 
 
 @router.message(Command('stats'))
