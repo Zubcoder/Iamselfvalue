@@ -15,7 +15,7 @@ import html
 import json
 import os
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from aiogram import Bot, Dispatcher, F, Router, types
@@ -64,14 +64,27 @@ LEAD_WELCOME_TEXT = os.getenv(
 )
 LEAD_CONTACT_REQUEST_TEXT = os.getenv(
     'LEAD_CONTACT_REQUEST_TEXT',
-    'Если хотите, я напишу вам, когда появятся новые материалы или места на сессии. '
-    'Оставьте номер телефона или нажмите «Пропустить».'
+    'Оставьте номер — я напишу, когда освободятся места на сессии. '
+    'Это добровольно: можно нажать «Пропустить» и просто забрать гайд.'
 )
 LEAD_THANKS_CONTACT_TEXT = os.getenv('LEAD_THANKS_CONTACT_TEXT', 'Спасибо! Контакт сохранён. До встречи ✨')
 LEAD_NO_FILE_TEXT = os.getenv(
     'LEAD_NO_FILE_TEXT',
     'Гайд в финальной подготовке — как только будет готов, я отправлю его первым делом.'
 )
+LEAD_CHANNEL_INVITE_TEXT = os.getenv(
+    'LEAD_CHANNEL_INVITE_TEXT',
+    'Если тема синдрома «хорошей девочки» откликается — приходите в мой Telegram-канал: '
+    'там практики, мысли и анонсы сессий.\n\n'
+    'https://t.me/iamselfvalue'
+)
+LEAD_FOLLOWUP_TEXT = os.getenv(
+    'LEAD_FOLLOWUP_TEXT',
+    'Добрый день! Как вам гайд? Узнали ли в каких-то признаках себя? '
+    'Если хочется разобраться глубже — запишитесь на диагностику, буду рада пообщаться.'
+)
+LEAD_FOLLOWUP_HOURS = int(os.getenv('LEAD_FOLLOWUP_HOURS', '48'))
+CHANNEL_USERNAME = os.getenv('CHANNEL_USERNAME', 'https://t.me/iamselfvalue')
 
 THANKS_CONTACT_TEXT = LEAD_THANKS_CONTACT_TEXT
 NO_MEDITATION_TEXT = JAM_NO_MEDITATION_TEXT
@@ -103,6 +116,18 @@ def init_db():
             )
             '''
         )
+        conn.execute(
+            '''
+            CREATE TABLE IF NOT EXISTS followups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                chat_id INTEGER NOT NULL,
+                due_at TEXT NOT NULL,
+                text TEXT NOT NULL,
+                sent INTEGER DEFAULT 0
+            )
+            '''
+        )
         conn.commit()
 
 
@@ -129,6 +154,34 @@ def get_all_user_ids():
     with _db() as conn:
         rows = conn.execute('SELECT user_id FROM subscribers').fetchall()
     return [r['user_id'] for r in rows]
+
+
+def schedule_followup(user_id: int, chat_id: int, text: str, hours: int = 48):
+    due = datetime.now(timezone.utc) + timedelta(hours=hours)
+    with _db() as conn:
+        conn.execute(
+            'INSERT OR REPLACE INTO followups (user_id, chat_id, due_at, text, sent) '
+            'VALUES (?, ?, ?, ?, 0)',
+            (user_id, chat_id, due.isoformat(), text),
+        )
+        conn.commit()
+
+
+def get_due_followups():
+    now = datetime.now(timezone.utc).isoformat()
+    with _db() as conn:
+        rows = conn.execute(
+            'SELECT id, user_id, chat_id, text FROM followups '
+            'WHERE due_at <= ? AND sent = 0',
+            (now,),
+        ).fetchall()
+    return rows
+
+
+def mark_followup_sent(followup_id: int):
+    with _db() as conn:
+        conn.execute('UPDATE followups SET sent = 1 WHERE id = ?', (followup_id,))
+        conn.commit()
 
 
 def get_subscriber_count():
@@ -194,6 +247,13 @@ async def cmd_start(message: Message, command: CommandObject):
     if campaign.startswith('lead_') or campaign == 'lead':
         await send_lead_magnet(message, user)
         contact_text = LEAD_CONTACT_REQUEST_TEXT
+        await asyncio.to_thread(
+            schedule_followup,
+            user.id,
+            message.chat.id,
+            LEAD_FOLLOWUP_TEXT,
+            LEAD_FOLLOWUP_HOURS,
+        )
     else:
         await send_meditation(message)
         contact_text = JAM_CONTACT_REQUEST_TEXT
@@ -201,6 +261,14 @@ async def cmd_start(message: Message, command: CommandObject):
     await message.answer(
         contact_text,
         reply_markup=contact_keyboard(),
+    )
+
+
+async def send_channel_invite(message: Message):
+    await message.answer(
+        LEAD_CHANNEL_INVITE_TEXT.format(channel=CHANNEL_USERNAME),
+        parse_mode=ParseMode.HTML,
+        disable_web_page_preview=False,
     )
 
 
@@ -218,14 +286,24 @@ async def on_contact(message: Message):
         THANKS_CONTACT_TEXT,
         reply_markup=types.ReplyKeyboardRemove(),
     )
+    if campaign.startswith('lead_'):
+        await send_channel_invite(message)
 
 
 @router.message(F.text == '🔕 Пропустить')
 async def skip_contact(message: Message):
+    user = message.from_user
+    campaign = 'direct'
+    with _db() as conn:
+        row = conn.execute('SELECT campaign FROM subscribers WHERE user_id = ?', (user.id,)).fetchone()
+        if row and row['campaign']:
+            campaign = row['campaign']
     await message.answer(
         'Хорошо. Если передумаете — напишите /start.',
         reply_markup=types.ReplyKeyboardRemove(),
     )
+    if campaign.startswith('lead_'):
+        await send_channel_invite(message)
 
 
 @router.message(Command('myid'))
@@ -307,6 +385,31 @@ async def cmd_export(message: Message):
     )
 
 
+async def scheduler(bot: Bot):
+    """Send scheduled follow-up messages."""
+    print('Scheduler started', flush=True)
+    while True:
+        await asyncio.sleep(60)
+        rows = await asyncio.to_thread(get_due_followups)
+        for row in rows:
+            try:
+                await bot.send_message(
+                    row['chat_id'],
+                    row['text'],
+                    parse_mode=ParseMode.HTML,
+                    disable_web_page_preview=True,
+                )
+            except Exception:
+                # User blocked the bot or deleted the chat; mark as sent to avoid retries.
+                pass
+            await asyncio.to_thread(mark_followup_sent, row['id'])
+
+
+async def keep_alive():
+    while True:
+        await asyncio.sleep(3600)
+
+
 async def main() -> None:
     if not BOT_TOKEN:
         raise RuntimeError('BOT_TOKEN is not set. Copy .env.example to .env and fill it.')
@@ -320,6 +423,9 @@ async def main() -> None:
     webhook_url = os.getenv('WEBHOOK_URL')
     webapp_host = os.getenv('WEBAPP_HOST', '0.0.0.0')
     webapp_port = int(os.getenv('WEBAPP_PORT', '8080'))
+
+    await bot.delete_webhook(drop_pending_updates=True)
+    print('Bot started', flush=True)
 
     if webhook_url:
         from aiohttp import web
@@ -336,11 +442,9 @@ async def main() -> None:
         site = web.TCPSite(runner, webapp_host, webapp_port)
         await site.start()
         print(f'Webhook server started on {webapp_host}:{webapp_port}')
-        while True:
-            await asyncio.sleep(3600)
+        await asyncio.gather(keep_alive(), scheduler(bot))
     else:
-        await bot.delete_webhook(drop_pending_updates=True)
-        await dp.start_polling(bot)
+        await asyncio.gather(dp.start_polling(bot), scheduler(bot))
 
 
 if __name__ == '__main__':
