@@ -220,9 +220,6 @@ async def send_meditation(message: Message):
 
 
 async def send_lead_magnet(message: Message, user: types.User):
-    name = user.first_name or 'друг'
-    await message.answer(LEAD_WELCOME_TEXT.replace('{name}', name), parse_mode=ParseMode.HTML)
-
     video_note_path = Path(LEAD_VIDEO_NOTE_FILE)
     if video_note_path.is_file():
         await message.answer_video_note(
