@@ -20,6 +20,8 @@ from pathlib import Path
 
 from aiogram import Bot, Dispatcher, F, Router, types
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.client.telegram import TelegramAPIServer
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import BufferedInputFile, FSInputFile, Message, ReplyKeyboardMarkup, KeyboardButton
@@ -30,6 +32,7 @@ load_dotenv(Path(__file__).with_name('.env'))
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 ADMIN_IDS = {int(x.strip()) for x in os.getenv('ADMIN_IDS', '').split(',') if x.strip()}
+TELEGRAM_API_BASE_URL = os.getenv('TELEGRAM_API_BASE_URL', '')
 MEDITATION_FILE = os.getenv('MEDITATION_FILE', str(Path(__file__).parent / 'media' / 'meditation.mp3'))
 
 # Orange-jam / meditation flow
@@ -416,7 +419,16 @@ async def main() -> None:
 
     await asyncio.to_thread(init_db)
 
-    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    api = None
+    if TELEGRAM_API_BASE_URL:
+        base_url = TELEGRAM_API_BASE_URL.rstrip('/')
+        api = TelegramAPIServer(
+            base=f'{base_url}/bot{{token}}/{{method}}',
+            file=f'{base_url}/file/bot{{token}}/{{path}}',
+            is_local=False,
+        )
+    session = AiohttpSession(api=api) if api else AiohttpSession()
+    bot = Bot(token=BOT_TOKEN, session=session, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
     dp.include_router(router)
 

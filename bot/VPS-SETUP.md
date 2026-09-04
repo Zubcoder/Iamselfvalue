@@ -120,7 +120,61 @@ ufw allow OpenSSH
 ufw enable
 ```
 
-## 10. Если что-то пошло не так
+## 10. Обход блокировки `api.telegram.org` (если бот не стартует)
+
+Некоторые российские облака/провайдеры блокируют исходящие соединения к `api.telegram.org` (таймаут в логах `TelegramNetworkError`).
+
+### Вариант A — Cloudflare Worker (бесплатно, рекомендуется)
+
+1. Зарегистрируйтесь на [Cloudflare](https://dash.cloudflare.com/sign-up) (бесплатно).
+2. Создайте API-токен `Zone:Read, Workers Scripts:Edit`.
+3. Установите `wrangler` и авторизуйтесь:
+
+```bash
+npm install -g wrangler
+wrangler login
+```
+
+4. Разверните прокси из папки `bot`:
+
+```bash
+cd bot
+wrangler deploy
+```
+
+Полученный URL вида `https://iamselfvalue-telegram-api-proxy.<your-account>.workers.dev` добавьте в `.env`:
+
+```bash
+TELEGRAM_API_BASE_URL=https://iamselfvalue-telegram-api-proxy.<your-account>.workers.dev
+```
+
+Перезапустите бота:
+
+```bash
+sudo systemctl restart iamselfvalue-bot
+```
+
+### Вариант B — маленький VPS за рубежом с Caddy
+
+Если не хотите Cloudflare, купите самый дешёвый VPS вне РФ (например, Hetzner/Beget/Timeweb EU, от $3/мес) и поставьте Caddy:
+
+```
+bot-api.iamselfvalue.ru {
+    reverse_proxy https://api.telegram.org {
+        header_up Host api.telegram.org
+    }
+    @not_vps remote_ip ! 194.67.99.224
+    respond @not_vps 403
+}
+```
+
+В `.env` укажите `TELEGRAM_API_BASE_URL=https://bot-api.iamselfvalue.ru`.
+
+### Вариант C — не используйте чужие публичные прокси
+
+Публичные прокси для Telegram Bot API видят ваш токен и могут его перехватить. Разворачивайте только свой Worker/Caddy.
+
+## 11. Если что-то пошло не так
 
 ```bash
 # остановить
