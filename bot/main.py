@@ -485,7 +485,7 @@ async def main() -> None:
     webapp_host = os.getenv('WEBAPP_HOST', '0.0.0.0')
     webapp_port = int(os.getenv('WEBAPP_PORT', '8080'))
 
-    await bot.delete_webhook(drop_pending_updates=True)
+    await bot.delete_webhook(drop_pending_updates=False)
     print('Bot started', flush=True)
 
     if webhook_url:
