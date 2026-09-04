@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Продукция для домашней практики | Я Есть Ценность</title>
+  <meta name="description" content="Авторские продукты для домашней практики: апельсиновый джем с медитацией, коробочка счастья, Telegram-бот медитаций." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://iamselfvalue.ru/products.html" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --emerald: #105040;
+      --emerald-dark: #0a3b2e;
+      --purple: #423189;
+      --purple-dark: #2f2364;
+      --gold: #D4AF37;
+      --white: #FFFFFF;
+      --text: #FFFFFF;
+      --text-muted: rgba(255, 255, 255, 0.78);
+      --radius: 20px;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      --max-width: 1120px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      color: var(--text);
+      background: var(--emerald);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; font-weight: 600; line-height: 1.25; }
+    a { color: inherit; text-decoration: none; }
+    .container { width: 92%; max-width: var(--max-width); margin: 0 auto; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 16px 32px; border-radius: 50px; font-weight: 600; font-size: 1rem;
+      transition: all 0.3s ease; cursor: pointer; border: none;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--gold), #B8962F); color: var(--emerald-dark); box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 44px rgba(0,0,0,0.35); }
+    .btn-outline { background: transparent; color: var(--text); border: 2px solid rgba(255,255,255,0.4); }
+    .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: var(--text); }
+
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .header-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+    .logo { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.05rem; color: var(--text); }
+    .logo img { width: 42px; height: 42px; border-radius: 12px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2)); }
+    nav { display: flex; align-items: center; gap: 20px; }
+    nav a { font-weight: 500; font-size: 0.9rem; color: var(--text); transition: color 0.2s; }
+    nav a:hover, nav a.active { color: var(--gold); }
+    .burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .burger span { width: 26px; height: 2px; background: var(--text); border-radius: 2px; }
+
+    .hero {
+      min-height: 50vh; display: flex; align-items: center; justify-content: center; text-align: center;
+      padding: 140px 0 80px;
+      background: linear-gradient(rgba(16,80,64,0.82), rgba(66,49,137,0.82)), url('section-bg-light-v1.webp') center/cover no-repeat;
+      position: relative; overflow: hidden;
+    }
+    .hero .container { position: relative; z-index: 1; }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); margin-bottom: 18px; }
+    .hero h1 span { color: var(--gold); }
+    .hero p { font-size: 1.1rem; color: var(--text-muted); max-width: 620px; margin: 0 auto 32px; }
+
+    .section { padding: 90px 0; background: var(--emerald); }
+    .section-header { text-align: center; max-width: 660px; margin: 0 auto 56px; }
+    .section-header h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); margin-bottom: 14px; }
+    .section-header p { color: var(--text-muted); }
+
+    .cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px;
+    }
+    .card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius);
+      padding: 34px 28px; box-shadow: var(--shadow); transition: transform 0.3s, background 0.3s;
+      display: flex; flex-direction: column;
+    }
+    .card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.09); }
+    .card-icon {
+      width: 54px; height: 54px; border-radius: 14px; background: var(--purple);
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 20px;
+    }
+    .card h3 { font-size: 1.25rem; margin-bottom: 10px; }
+    .card p { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 18px; flex-grow: 1; }
+    .price { display: inline-block; font-weight: 700; font-size: 1.25rem; color: var(--gold); }
+
+    .bot-box {
+      max-width: 720px; margin: 70px auto 0; text-align: center;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius); padding: 48px 36px; box-shadow: var(--shadow);
+    }
+    .bot-box h3 { font-size: 1.5rem; margin-bottom: 12px; color: var(--gold); }
+    .bot-box p { color: var(--text-muted); margin-bottom: 24px; }
+
+    footer {
+      padding: 34px 0; background: rgba(0,0,0,0.25); color: var(--text); text-align: center; font-size: 0.9rem;
+    }
+    footer a { color: var(--gold); font-weight: 500; }
+    .footer-links { margin-bottom: 12px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 18px; }
+    .footer-links a { color: var(--gold); font-size: 0.85rem; }
+
+    @media (max-width: 920px) {
+      nav { display: none; position: absolute; top: 76px; left: 0; right: 0; background: var(--emerald); flex-direction: column; padding: 24px; gap: 14px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+      nav.open { display: flex; }
+      .burger { display: flex; }
+    }
+    @media (max-width: 600px) {
+      .hero { padding: 120px 0 60px; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container header-inner">
+      <a href="/" class="logo">
+        <picture>
+          <source srcset="logo-icon.webp" type="image/webp">
+          <img src="logo-icon.png" alt="Логотип Я Есть Ценность" width="256" height="256" />
+        </picture>
+        <span>Я Есть Ценность</span>
+      </a>
+      <nav id="nav">
+        <a href="/">Главная</a>
+        <a href="/blog.html">Блог</a>
+        <a href="/products.html" class="active">Продукция</a>
+        <a href="/#contact">Контакты</a>
+      </nav>
+      <div class="burger" aria-label="Открыть меню" role="button" tabindex="0">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1>Продукция для <span>домашней практики</span></h1>
+        <p>Авторские продукты, которые можно взять с собой.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Что можно взять с собой</h2>
+          <p>Поддерживающие вещи, которые можно взять с собой: авторские джем, чай и медитации.</p>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div class="card-icon">🍊</div>
+            <h3>Апельсиновый джем + медитация</h3>
+            <p>Представь: медленное утро, чашка тёплого чая и ложечка апельсинового джема. Это про маленькую паузу, где не нужно быть ни сильной, ни правильной, ни удобной. Только собой. К баночке прилагается короткая медитация, чтобы на пару минут остановиться и вернуться к себе. Маленький ритуал, который можно повторять каждый день 🍊💜</p>
+            <div class="price">400 ₽</div>
+            <a href="https://t.me/The_Inner_Sun_bot?start=from_products" class="btn btn-outline" target="_blank" rel="noopener" style="margin-top:14px; width:100%;">Заказать в Telegram</a>
+          </div>
+          <div class="card">
+            <div class="card-icon">🎁</div>
+            <h3>Коробочка счастья</h3>
+            <p>Авторский набор: апельсиновый джем, чай, медитация и приятный сюрприз. Хороший подарок себе или близкому человеку.</p>
+            <div class="price">1 990 ₽</div>
+            <a href="https://t.me/The_Inner_Sun_bot?start=from_products" class="btn btn-outline" target="_blank" rel="noopener" style="margin-top:14px; width:100%;">Заказать в Telegram</a>
+          </div>
+        </div>
+
+        <div class="bot-box">
+          <h3>Бот медитаций — @The_Inner_Sun_bot</h3>
+          <p>Ежедневные короткие медитации в Telegram.</p>
+          <a href="https://t.me/The_Inner_Sun_bot?start=from_products" class="btn btn-primary" target="_blank" rel="noopener">Бот медитации — @The_Inner_Sun_bot</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p class="footer-links">
+        <a href="/">Главная</a>
+        <a href="/blog.html">Блог</a>
+        <a href="/products.html">Продукция</a>
+        <a href="/privacy.html">Политика конфиденциальности</a>
+        <a href="/terms.html">Оферта</a>
+        <a href="/consent.html">Согласие на обработку данных</a>
+      </p>
+      <p>© 2026 Я Есть Ценность · <a href="https://t.me/iamselfvalue" target="_blank" rel="noopener">t.me/iamselfvalue</a></p>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      const nav = document.getElementById('nav');
+      const burger = document.querySelector('.burger');
+      if (burger && nav) {
+        burger.addEventListener('click', function() { nav.classList.toggle('open'); });
+      }
+    })();
+  </script>
+</body>
+</html>
