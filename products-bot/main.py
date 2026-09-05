@@ -12,10 +12,14 @@ import csv
 import html
 import io
 import json
+import logging
 import os
 import sqlite3
+import traceback
 from datetime import datetime, timezone
 from pathlib import Path
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 from aiogram import Bot, Dispatcher, F, Router, types
 from aiogram.client.default import DefaultBotProperties
@@ -322,7 +326,7 @@ async def process_receipt(message: Message, state: FSMContext):
                 await message.bot.send_document(target, document=file_id, caption=caption, reply_markup=keyboard)
             sent = True
         except Exception:
-            pass
+            logging.exception('Failed to forward order to %s', target)
 
     if not sent:
         await message.answer('Не удалось отправить заявку. Напиши, пожалуйста, в поддержку.')
@@ -360,11 +364,18 @@ async def confirm_payment(callback: CallbackQuery):
         )
         await send_meditation(callback.bot, order['user_id'])
     except Exception:
+        logging.exception('Failed to send meditation to user %s', order['user_id'])
         await callback.answer('Не удалось отправить медитацию. Возможно, пользователь заблокировал бота.', show_alert=True)
         return
 
-    new_caption = (callback.message.caption or '') + '\n\n✅ Оплачено, медитация отправлена покупателю.'
-    await callback.message.edit_caption(caption=new_caption, reply_markup=None)
+    status_line = '\n\n✅ Оплачено, медитация отправлена покупателю.'
+    try:
+        if callback.message.caption is not None:
+            await callback.message.edit_caption(caption=callback.message.caption + status_line, reply_markup=None)
+        else:
+            await callback.message.edit_text(text=(callback.message.text or '') + status_line, reply_markup=None)
+    except Exception:
+        logging.exception('Failed to update channel message')
     await callback.answer('Оплата подтверждена, медитация отправлена.')
 
 
@@ -378,6 +389,7 @@ async def cmd_help(message: Message):
             '/stats — статистика заказов\n'
             '/export — выгрузка заказов (CSV)\n'
             '/myid — узнать свой Telegram ID\n'
+            '/testorder — отправить тестовую заявку в канал\n'
             '/help — справка'
         )
     else:
@@ -415,6 +427,33 @@ async def cmd_export(message: Message):
 async def cmd_myid(message: Message):
     user = message.from_user
     await message.answer(f'Ваш Telegram ID: <code>{user.id}</code>', parse_mode=ParseMode.HTML)
+
+
+@router.message(Command('testorder'))
+async def cmd_testorder(message: Message):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+    product = (message.text or '').split(' ', 1)[1].strip() if ' ' in (message.text or '') else 'jam'
+    if product not in PRODUCTS:
+        product = 'jam'
+    data = {
+        'product': product,
+        'name': 'Тест',
+        'phone': '+70000000000',
+    }
+    user = message.from_user
+    order_id = await asyncio.to_thread(save_order, data, user)
+    caption = build_order_caption(order_id, data, user)
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text='✅ Подтвердить оплату', callback_data=f'confirm:{order_id}')]]
+    )
+    target = ORDERS_CHANNEL_ID or message.chat.id
+    try:
+        await message.bot.send_message(target, caption, reply_markup=keyboard)
+        await message.answer(f'Тестовая заявка #{order_id} отправлена в канал.')
+    except Exception:
+        logging.exception('Failed to send test order to %s', target)
+        await message.answer('Не удалось отправить тестовую заявку. Проверь, что бот добавлен в канал.')
 
 
 @router.message(F.forward_origin | F.forward_from_chat)
