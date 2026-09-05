@@ -377,6 +377,7 @@ async def cmd_help(message: Message):
             '/setmeditation — сохранить медитацию (ответом на аудио)\n'
             '/stats — статистика заказов\n'
             '/export — выгрузка заказов (CSV)\n'
+            '/myid — узнать свой Telegram ID\n'
             '/help — справка'
         )
     else:
@@ -408,6 +409,29 @@ async def cmd_export(message: Message):
         document=BufferedInputFile(output.getvalue().encode('utf-8'), 'orders.csv'),
         caption='Заказы',
     )
+
+
+@router.message(Command('myid'))
+async def cmd_myid(message: Message):
+    user = message.from_user
+    await message.answer(f'Ваш Telegram ID: <code>{user.id}</code>', parse_mode=ParseMode.HTML)
+
+
+@router.message(F.forward_origin | F.forward_from_chat)
+async def on_forwarded_channel(message: Message):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+    chat = None
+    origin = message.forward_origin
+    if origin:
+        chat = getattr(origin, 'chat', None)
+    if not chat:
+        chat = message.forward_from_chat
+    if chat:
+        await message.answer(
+            f'ID канала: <code>{chat.id}</code>\nНазвание: {chat.title or "—"}',
+            parse_mode=ParseMode.HTML,
+        )
 
 
 @router.message(Command('setmeditation'))
