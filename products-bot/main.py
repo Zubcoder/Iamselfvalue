@@ -282,7 +282,7 @@ async def ask_name(message: Message, state: FSMContext):
     data = await state.get_data()
     product = data.get('product')
     title = PRODUCTS.get(product, {}).get('title', '')
-    text = 'Напиши, пожалуйста, ФИО полностью, чтобы я могла оформить отправку.'
+    text = 'Напиши, пожалуйста, ФИО полностью, чтобы я могла оформить доставку.'
     if product:
         text = f'Отличный выбор — {title}!\n{text}'
     await message.answer(text)
@@ -302,8 +302,8 @@ async def ask_phone(message: Message, state: FSMContext):
 
 async def ask_address(message: Message, state: FSMContext):
     await message.answer(
-        'Напиши, пожалуйста, адрес доставки полностью: город, улица, дом, квартира, индекс.\n'
-        'Доставка рассчитывается отдельно — после уточнения стоимости я пришлю итоговую сумму и реквизиты.',
+        'Напиши, пожалуйста, адрес доставки полностью: индекс, город, улица, дом, квартира.\n'
+        'Доставка рассчитывается отдельно — после уточнения стоимости я пришлю итоговую сумму и реквизиты для оплаты.',
         reply_markup=ReplyKeyboardRemove(),
     )
     await state.set_state(OrderForm.address)
@@ -341,7 +341,7 @@ async def submit_order_for_quote(message: Message, state: FSMContext):
         await state.clear()
         return
     await message.answer(
-        'Спасибо! Я получила адрес. Сейчас уточню стоимость доставки и пришлю итоговую сумму с реквизитами. '
+        'Спасибо! Я получила адрес. Сейчас уточню стоимость доставки и пришлю итоговую сумму с реквизитами для оплаты. '
         'Обычно отвечаю в течение нескольких часов.'
     )
     await state.set_state(OrderForm.waiting_price)
@@ -418,7 +418,7 @@ async def process_address(message: Message, state: FSMContext):
 @router.message(OrderForm.waiting_price)
 async def process_waiting_price(message: Message):
     await message.answer(
-        'Я уточняю стоимость доставки. Как только рассчитаю — сразу пришлю итоговую сумму и реквизиты.'
+        'Я уточняю стоимость доставки. Как только рассчитаю — сразу пришлю итоговую сумму и реквизиты для оплаты.'
     )
 
 
@@ -555,8 +555,9 @@ async def on_set_price(callback: CallbackQuery, state: FSMContext):
         f'Имя: {order["name"]}\n'
         f'Телефон: {order["phone"]}\n'
         f'Адрес: {order.get("address", "")}\n\n'
-        f'Укажи итоговую сумму (товар + доставку) и сроки доставки одним сообщением. Пример:\n'
-        f'<code>1400, 3-5 рабочих дней</code>'
+        f'Ответь этим ботом одним сообщением: сначала итоговую сумму (товар + доставка), затем сроки доставки.\n'
+        f'Пример: <code>1400, 3-5 рабочих дней</code>\n\n'
+        f'После этого я пришлю клиенту итоговую сумму, сроки и реквизиты для оплаты.'
     )
     await callback.bot.send_message(callback.from_user.id, text, parse_mode=ParseMode.HTML)
     await callback.answer()
@@ -617,7 +618,7 @@ async def process_set_price(message: Message, state: FSMContext):
         except Exception:
             logging.exception('Failed to update channel message after pricing order %s', order_id)
 
-    await message.answer(f'Заказ #{order_id}: итого <b>{total} ₽</b>, сроки: {delivery_info}. Покупателю отправлены реквизиты.')
+    await message.answer(f'Заказ #{order_id}: итого <b>{total} ₽</b>, сроки: {delivery_info}. Покупателю отправлены реквизиты для оплаты.')
     await state.clear()
 
 
@@ -678,7 +679,7 @@ async def cmd_help(message: Message):
     else:
         text = (
             'Напиши /start, выбери товар, и я помогу оформить заказ.\n\n'
-            'Доставка рассчитывается отдельно: ты оставишь ФИО, телефон и адрес, а я пришлю итоговую сумму (товар + доставка) и реквизиты.'
+            'Доставка рассчитывается отдельно: ты оставишь ФИО, телефон и адрес, а я пришлю итоговую сумму (товар + доставка) и реквизиты для оплаты.'
         )
     await message.answer(text)
 
