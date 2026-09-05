@@ -74,6 +74,7 @@ PRODUCTS = {
 }
 
 router = Router()
+storage = MemoryStorage()
 
 
 class OrderForm(StatesGroup):
@@ -83,10 +84,6 @@ class OrderForm(StatesGroup):
     address = State()
     waiting_price = State()
     receipt = State()
-
-
-class AdminForm(StatesGroup):
-    setting_price = State()
 
 
 def _he(s: str) -> str:
@@ -115,6 +112,7 @@ def init_db():
                 address TEXT,
                 total TEXT,
                 delivery_info TEXT,
+                channel_message_id INTEGER,
                 status TEXT DEFAULT 'pending',
                 created_at TEXT
             )
@@ -127,6 +125,8 @@ def init_db():
             conn.execute('ALTER TABLE orders ADD COLUMN total TEXT')
         if 'delivery_info' not in columns:
             conn.execute('ALTER TABLE orders ADD COLUMN delivery_info TEXT')
+        if 'channel_message_id' not in columns:
+            conn.execute('ALTER TABLE orders ADD COLUMN channel_message_id INTEGER')
         conn.commit()
 
 
@@ -170,6 +170,23 @@ def update_order_price(order_id: int, total: str, delivery_info: str):
         conn.execute(
             'UPDATE orders SET total = ?, delivery_info = ? WHERE id = ?',
             (total, delivery_info, order_id),
+        )
+        conn.commit()
+
+
+def get_order_by_channel_message_id(channel_message_id: int):
+    with _db() as conn:
+        row = conn.execute(
+            'SELECT * FROM orders WHERE channel_message_id = ?', (channel_message_id,)
+        ).fetchone()
+    return row
+
+
+def update_order_channel_message_id(order_id: int, channel_message_id: int):
+    with _db() as conn:
+        conn.execute(
+            'UPDATE orders SET channel_message_id = ? WHERE id = ?',
+            (channel_message_id, order_id),
         )
         conn.commit()
 
@@ -317,22 +334,24 @@ async def submit_order_for_quote(message: Message, state: FSMContext):
     await state.update_data(order_id=order_id)
     logging.info('Order saved id=%s for quote', order_id)
     caption = build_order_caption(order_id, data, user)
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[[
-            InlineKeyboardButton(
-                text='💰 Указать сумму и сроки доставки',
-                callback_data=f'setprice:{order_id}',
-            ),
-        ]]
+    admin_hint = (
+        '\n\n💬 Для расчёта ответьте на это сообщение: <сумма>, <сроки доставки>.\n'
+        'Пример: <code>1400, 3-5 рабочих дней</code>'
     )
     targets = [ORDERS_CHANNEL_ID] if ORDERS_CHANNEL_ID else ADMIN_IDS
+    channel_message_id = None
     sent = False
     for target in targets:
         if not target:
             continue
         try:
-            await message.bot.send_message(target, caption, reply_markup=keyboard)
-            logging.info('Quote request for order %s sent to %s', order_id, target)
+            sent_msg = await message.bot.send_message(
+                target,
+                caption + admin_hint,
+                parse_mode=ParseMode.HTML,
+            )
+            channel_message_id = sent_msg.message_id
+            logging.info('Quote request for order %s sent to %s msg_id=%s', order_id, target, channel_message_id)
             sent = True
         except Exception:
             logging.exception('Failed to send quote request for order %s to %s', order_id, target)
@@ -340,6 +359,9 @@ async def submit_order_for_quote(message: Message, state: FSMContext):
         await message.answer('Не удалось отправить заявку. Напиши, пожалуйста, в поддержку.')
         await state.clear()
         return
+    if channel_message_id:
+        await asyncio.to_thread(update_order_channel_message_id, order_id, channel_message_id)
+        await state.update_data(channel_message_id=channel_message_id)
     await message.answer(
         'Спасибо! Я получила адрес. Сейчас уточню стоимость доставки и пришлю итоговую сумму с реквизитами для оплаты. '
         'Обычно отвечаю в течение нескольких часов.'
@@ -409,7 +431,7 @@ async def process_address(message: Message, state: FSMContext):
     address = message.text.strip()
     logging.info('User %s sent address: %s', message.from_user.id, address)
     if len(address) < 8:
-        await message.answer('Пожалуйста, напиши полный адрес: город, улица, дом, квартира, индекс.')
+        await message.answer('Пожалуйста, напиши полный адрес: индекс, город, улица, дом, квартира.')
         return
     await state.update_data(address=address)
     await submit_order_for_quote(message, state)
@@ -459,6 +481,7 @@ async def process_receipt(message: Message, state: FSMContext):
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text='✅ Подтвердить оплату', callback_data=f'confirm:{order_id}')]]
     )
+    channel_message_id = data.get('channel_message_id')
 
     sent = False
     targets = [ORDERS_CHANNEL_ID] if ORDERS_CHANNEL_ID else ADMIN_IDS
@@ -468,9 +491,21 @@ async def process_receipt(message: Message, state: FSMContext):
             continue
         try:
             if is_photo:
-                await message.bot.send_photo(target, photo=file_id, caption=caption, reply_markup=keyboard)
+                await message.bot.send_photo(
+                    target,
+                    photo=file_id,
+                    caption=caption,
+                    reply_markup=keyboard,
+                    reply_to_message_id=channel_message_id,
+                )
             else:
-                await message.bot.send_document(target, document=file_id, caption=caption, reply_markup=keyboard)
+                await message.bot.send_document(
+                    target,
+                    document=file_id,
+                    caption=caption,
+                    reply_markup=keyboard,
+                    reply_to_message_id=channel_message_id,
+                )
             logging.info('Receipt for order %s forwarded to %s', order_id, target)
             sent = True
         except Exception:
@@ -510,116 +545,57 @@ async def set_user_state_and_data(storage, user_id: int, bot_id: int, data: dict
     await storage.set_data(key, data)
 
 
-async def set_admin_state_and_data(storage, admin_id: int, bot_id: int, data: dict, state):
-    key = StorageKey(chat_id=admin_id, user_id=admin_id, bot_id=bot_id)
-    await storage.set_state(key, state)
-    await storage.set_data(key, data)
-
-
-@router.callback_query(F.data.startswith('setprice:'))
-async def on_set_price(callback: CallbackQuery, state: FSMContext):
-    if callback.from_user.id not in ADMIN_IDS:
-        await callback.answer('Недостаточно прав.', show_alert=True)
-        return
-
-    order_id = int(callback.data.split(':', 1)[1])
-    logging.info('Admin %s requested price setting for order %s', callback.from_user.id, order_id)
-    order = await asyncio.to_thread(get_order, order_id)
-    if not order:
-        await callback.answer('Заказ не найден.', show_alert=True)
-        return
-
-    admin_id = callback.from_user.id
-    await set_admin_state_and_data(
-        state.storage,
-        admin_id,
-        callback.bot.id,
-        {
-            'order_id': order_id,
-            'channel_msg_id': callback.message.message_id,
-            'channel_chat_id': callback.message.chat.id,
-        },
-        AdminForm.setting_price,
-    )
-    try:
-        await callback.message.edit_reply_markup(reply_markup=None)
-    except Exception:
-        logging.exception('Failed to remove setprice button for order %s', order_id)
-
-    order = dict(order)
-    product = PRODUCTS.get(order['product'], {})
-    text = (
-        f'Заказ <b>#{order_id}</b>\n'
-        f'Товар: {product.get("title", "")}\n'
-        f'Цена товара: {product.get("price", "")} ₽\n'
-        f'Имя: {order["name"]}\n'
-        f'Телефон: {order["phone"]}\n'
-        f'Адрес: {order.get("address", "")}\n\n'
-        f'Ответь этим ботом одним сообщением: сначала итоговую сумму (товар + доставка), затем сроки доставки.\n'
-        f'Пример: <code>1400, 3-5 рабочих дней</code>\n\n'
-        f'После этого я пришлю клиенту итоговую сумму, сроки и реквизиты для оплаты.'
-    )
-    await callback.bot.send_message(callback.from_user.id, text, parse_mode=ParseMode.HTML)
-    await callback.answer()
-
-
-@router.message(AdminForm.setting_price, F.text)
-async def process_set_price(message: Message, state: FSMContext):
-    if message.from_user.id not in ADMIN_IDS:
-        await state.clear()
-        return
-
-    admin_data = await state.get_data()
-    order_id = admin_data.get('order_id')
-    if not order_id:
-        await message.answer('Нет активного заказа. Нажми кнопку в канале.')
-        await state.clear()
-        return
-
-    total, delivery_info = parse_price_text(message.text)
-    if total is None:
-        await message.answer(
-            'Не удалось распознать сумму. Пожалуйста, напиши число первым, а потом сроки. Пример: 1400, 3-5 дней'
-        )
-        return
-
-    order = await asyncio.to_thread(get_order, order_id)
-    if not order:
-        await message.answer('Заказ не найден.')
-        await state.clear()
-        return
-
+async def apply_price_and_notify(bot, order: sqlite3.Row, total: str, delivery_info: str, channel_message_id: int | None = None):
+    order_id = order['id']
+    user_id = order['user_id']
     await asyncio.to_thread(update_order_price, order_id, total, delivery_info)
     logging.info('Order %s price set to %s, delivery: %s', order_id, total, delivery_info)
 
-    user_id = order['user_id']
     user_data = dict(order)
     user_data['total'] = total
     user_data['delivery_info'] = delivery_info
     user_data['order_id'] = order_id
-    await set_user_state_and_data(state.storage, user_id, message.bot.id, user_data, OrderForm.receipt)
+    await set_user_state_and_data(storage, user_id, bot.id, user_data, OrderForm.receipt)
 
     payment_text = build_payment_request_text(user_data)
-    await message.bot.send_message(user_id, payment_text, reply_markup=ReplyKeyboardRemove())
+    await bot.send_message(user_id, payment_text, reply_markup=ReplyKeyboardRemove())
 
-    # Update the channel message with the calculated price
-    channel_msg_id = admin_data.get('channel_msg_id')
-    channel_chat_id = admin_data.get('channel_chat_id')
-    if channel_msg_id and channel_chat_id:
+    if channel_message_id:
         user_proxy = types.User(id=user_id, is_bot=False, first_name='', username=order['username'])
         new_caption = build_order_caption(order_id, user_data, user_proxy)
         try:
-            await message.bot.edit_message_text(
+            await bot.edit_message_text(
                 new_caption,
-                chat_id=channel_chat_id,
-                message_id=channel_msg_id,
+                chat_id=ORDERS_CHANNEL_ID,
+                message_id=channel_message_id,
                 reply_markup=None,
             )
         except Exception:
             logging.exception('Failed to update channel message after pricing order %s', order_id)
 
-    await message.answer(f'Заказ #{order_id}: итого <b>{total} ₽</b>, сроки: {delivery_info}. Покупателю отправлены реквизиты для оплаты.')
-    await state.clear()
+
+@router.channel_post(F.chat.id == int(ORDERS_CHANNEL_ID or 0), F.text)
+async def on_channel_price_reply(message: Message):
+    if not message.reply_to_message:
+        return
+    original_msg_id = message.reply_to_message.message_id
+    logging.info('Channel price reply to message %s', original_msg_id)
+
+    total, delivery_info = parse_price_text(message.text)
+    if total is None:
+        logging.warning('Could not parse price from channel reply: %s', message.text)
+        return
+
+    order = await asyncio.to_thread(get_order_by_channel_message_id, original_msg_id)
+    if not order:
+        logging.warning('No order found for channel message %s', original_msg_id)
+        return
+
+    await apply_price_and_notify(message.bot, order, total, delivery_info, original_msg_id)
+    try:
+        await message.delete()
+    except Exception:
+        logging.exception('Failed to delete channel price reply for order %s', order['id'])
 
 
 @router.callback_query(F.data.startswith('confirm:'))
@@ -674,7 +650,7 @@ async def cmd_help(message: Message):
             '/myid — узнать свой Telegram ID\n'
             '/testorder — отправить тестовую заявку в канал\n'
             '/help — справка\n\n'
-            'Для установки цены и сроков доставки используй кнопку «Указать сумму и сроки доставки» в канале.'
+            'Для расчёта суммы и сроков доставки ответь в канале на сообщение с заказом: сначала сумма, затем сроки. Пример: <code>1400, 3-5 рабочих дней</code>.'
         )
     else:
         text = (
@@ -742,7 +718,8 @@ async def cmd_testorder(message: Message):
     target = ORDERS_CHANNEL_ID or message.chat.id
     logging.info('Sending test order %s to %s', order_id, target)
     try:
-        await message.bot.send_message(target, caption, reply_markup=keyboard)
+        sent_msg = await message.bot.send_message(target, caption, reply_markup=keyboard)
+        await asyncio.to_thread(update_order_channel_message_id, order_id, sent_msg.message_id)
         await message.answer(f'Тестовая заявка #{order_id} отправлена в канал.')
     except Exception:
         logging.exception('Failed to send test order to %s', target)
@@ -824,7 +801,6 @@ async def main() -> None:
         session=session,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML, protect_content=True),
     )
-    storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
     dp.include_router(router)
 
