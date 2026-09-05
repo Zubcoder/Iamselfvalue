@@ -1,6 +1,8 @@
 .env
 bot/.data/
 bot/.venv/
+products-bot/.data/
+products-bot/.venv/
 __pycache__/
 *.pyc
 *.db
