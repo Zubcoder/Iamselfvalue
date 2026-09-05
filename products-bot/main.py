@@ -335,7 +335,7 @@ async def submit_order_for_quote(message: Message, state: FSMContext):
     logging.info('Order saved id=%s for quote', order_id)
     caption = build_order_caption(order_id, data, user)
     admin_hint = (
-        '\n\n💬 Для расчёта ответьте на это сообщение: <сумма>, <сроки доставки>.\n'
+        '\n\n💬 Для расчёта ответьте на это сообщение: сумма и сроки доставки.\n'
         'Пример: <code>1400, 3-5 рабочих дней</code>'
     )
     targets = [ORDERS_CHANNEL_ID] if ORDERS_CHANNEL_ID else ADMIN_IDS
