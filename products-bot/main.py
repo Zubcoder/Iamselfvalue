@@ -76,6 +76,7 @@ class OrderForm(StatesGroup):
     choosing_product = State()
     name = State()
     phone = State()
+    address = State()
     receipt = State()
 
 
@@ -102,11 +103,15 @@ def init_db():
                 product TEXT NOT NULL,
                 name TEXT NOT NULL,
                 phone TEXT NOT NULL,
+                address TEXT,
                 status TEXT DEFAULT 'pending',
                 created_at TEXT
             )
             '''
         )
+        columns = [row[1] for row in conn.execute('PRAGMA table_info(orders)').fetchall()]
+        if 'address' not in columns:
+            conn.execute('ALTER TABLE orders ADD COLUMN address TEXT')
         conn.commit()
 
 
@@ -114,7 +119,7 @@ def save_order(data: dict, user: types.User) -> int:
     now = datetime.now(timezone.utc).isoformat()
     with _db() as conn:
         cur = conn.execute(
-            'INSERT INTO orders (user_id, username, full_name, product, name, phone, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO orders (user_id, username, full_name, product, name, phone, address, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             (
                 user.id,
                 user.username,
@@ -122,6 +127,7 @@ def save_order(data: dict, user: types.User) -> int:
                 data['product'],
                 data['name'],
                 data['phone'],
+                data.get('address', ''),
                 'pending',
                 now,
             ),
@@ -151,7 +157,7 @@ def get_orders_count():
 def get_all_orders():
     with _db() as conn:
         rows = conn.execute(
-            'SELECT id, user_id, username, full_name, product, name, phone, status, created_at FROM orders ORDER BY created_at DESC'
+            'SELECT id, user_id, username, full_name, product, name, phone, address, status, created_at FROM orders ORDER BY created_at DESC'
         ).fetchall()
     return rows
 
@@ -171,11 +177,14 @@ def build_payment_text() -> str:
 def build_order_caption(order_id: int, data: dict, user: types.User) -> str:
     product = PRODUCTS[data['product']]
     username = f'@{user.username}' if user.username else 'нет username'
+    address = data.get('address', '')
+    address_line = f'\nАдрес: {_he(address)}' if address else ''
     return (
         f'📩 Новый заказ <b>#{order_id}</b>\n'
         f'Товар: {product["title"]} — {product["price"]} ₽\n'
         f'Имя: {_he(data["name"])}\n'
-        f'Телефон: {_he(data["phone"])}\n'
+        f'Телефон: {_he(data["phone"])}'
+        f'{address_line}\n'
         f'Покупатель: {_he(user.full_name)} (ID: {user.id}, {username})'
     )
 
@@ -204,7 +213,8 @@ async def show_products(message: Message, state: FSMContext):
     builder.button(text=f'🎁 {BOX_TITLE}', callback_data='product:box')
     builder.adjust(1)
     await message.answer(
-        'Привет! Здесь можно заказать джем с медитацией или коробочку счастья. Что выбираешь?',
+        'Привет! Здесь можно заказать джем с медитацией или коробочку счастья. Что выбираешь?\n\n'
+        'Для оформления понадобится ФИО, телефон, адрес доставки и скриншот чека об оплате.',
         reply_markup=builder.as_markup(),
     )
 
@@ -214,9 +224,9 @@ async def ask_name(message: Message, state: FSMContext):
     product = data.get('product')
     title = PRODUCTS.get(product, {}).get('title', '')
     if product:
-        await message.answer(f'Ты выбрала {title}. Как к тебе обращаться?')
+        await message.answer(f'Отличный выбор — {title}!\nНапиши, пожалуйста, ФИО полностью, чтобы я могла оформить отправку.')
     else:
-        await message.answer('Как к тебе обращаться?')
+        await message.answer('Напиши, пожалуйста, ФИО полностью, чтобы я могла оформить отправку.')
     await state.set_state(OrderForm.name)
 
 
@@ -225,10 +235,18 @@ async def ask_phone(message: Message, state: FSMContext):
     builder.button(text='📱 Поделиться номером', request_contact=True)
     builder.adjust(1)
     await message.answer(
-        'Оставь, пожалуйста, номер телефона — я пришлю реквизиты для оплаты.',
+        'Оставь, пожалуйста, номер телефона, чтобы я могла связаться с тобой по заказу.',
         reply_markup=builder.as_markup(resize_keyboard=True, one_time_keyboard=True),
     )
     await state.set_state(OrderForm.phone)
+
+
+async def ask_address(message: Message, state: FSMContext):
+    await message.answer(
+        'Напиши, пожалуйста, адрес доставки полностью: город, улица, дом, квартира, индекс.',
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await state.set_state(OrderForm.address)
 
 
 async def ask_receipt(message: Message, state: FSMContext):
@@ -238,9 +256,10 @@ async def ask_receipt(message: Message, state: FSMContext):
     p = PRODUCTS[product]
     payment_text = build_payment_text()
     text = (
-        f'{_he(name)}, ты выбрала «{p["title"]}» — {p["price"]} ₽.\n\n'
+        f'{_he(name)}, заказ: «{p["title"]}» — {p["price"]} ₽.\n\n'
         f'Реквизиты для оплаты:\n{payment_text}\n\n'
-        f'После оплаты пришли, пожалуйста, скриншот чека — я проверю и вышлю медитацию.'
+        f'После оплаты пришли скриншот чека фото или файлом (JPG/PNG). '\
+        f'Я проверю оплату и вышлю медитацию.'
     )
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
     await state.set_state(OrderForm.receipt)
@@ -276,7 +295,7 @@ async def process_name(message: Message, state: FSMContext):
     name = message.text.strip()
     logging.info('User %s sent name: %s', message.from_user.id, name)
     if len(name) < 2:
-        await message.answer('Пожалуйста, напиши, как к тебе обращаться.')
+        await message.answer('Пожалуйста, напиши ФИО полностью.')
         return
     await state.update_data(name=name)
     await ask_phone(message, state)
@@ -294,6 +313,17 @@ async def process_phone(message: Message, state: FSMContext):
         await message.answer('Пожалуйста, отправь номер телефона или поделись им через кнопку.')
         return
     await state.update_data(phone=phone)
+    await ask_address(message, state)
+
+
+@router.message(OrderForm.address, F.text)
+async def process_address(message: Message, state: FSMContext):
+    address = message.text.strip()
+    logging.info('User %s sent address: %s', message.from_user.id, address)
+    if len(address) < 8:
+        await message.answer('Пожалуйста, напиши полный адрес: город, улица, дом, квартира, индекс.')
+        return
+    await state.update_data(address=address)
     await ask_receipt(message, state)
 
 
@@ -314,7 +344,10 @@ async def process_receipt(message: Message, state: FSMContext):
         file_id = message.document.file_id
     if not file_id:
         logging.warning('User %s sent no image in receipt state', message.from_user.id)
-        await message.answer('Пожалуйста, пришли скриншот чека фото или документом.')
+        await message.answer(
+            'Пожалуйста, пришли скриншот чека именно фото или файлом-картинкой (JPG/PNG). '
+            'PDF, текст или другие файлы не подойдут.'
+        )
         return
 
     data = await state.get_data()
@@ -457,6 +490,7 @@ async def cmd_testorder(message: Message):
         'product': product,
         'name': 'Тест',
         'phone': '+70000000000',
+        'address': 'г. Москва, ул. Тестовая, 1',
     }
     user = message.from_user
     order_id = await asyncio.to_thread(save_order, data, user)
