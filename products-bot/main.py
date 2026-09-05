@@ -510,6 +510,12 @@ async def set_user_state_and_data(storage, user_id: int, bot_id: int, data: dict
     await storage.set_data(key, data)
 
 
+async def set_admin_state_and_data(storage, admin_id: int, bot_id: int, data: dict, state):
+    key = StorageKey(chat_id=admin_id, user_id=admin_id, bot_id=bot_id)
+    await storage.set_state(key, state)
+    await storage.set_data(key, data)
+
+
 @router.callback_query(F.data.startswith('setprice:'))
 async def on_set_price(callback: CallbackQuery, state: FSMContext):
     if callback.from_user.id not in ADMIN_IDS:
@@ -523,11 +529,17 @@ async def on_set_price(callback: CallbackQuery, state: FSMContext):
         await callback.answer('Заказ не найден.', show_alert=True)
         return
 
-    await state.set_state(AdminForm.setting_price)
-    await state.update_data(
-        order_id=order_id,
-        channel_msg_id=callback.message.message_id,
-        channel_chat_id=callback.message.chat.id,
+    admin_id = callback.from_user.id
+    await set_admin_state_and_data(
+        state.storage,
+        admin_id,
+        callback.bot.id,
+        {
+            'order_id': order_id,
+            'channel_msg_id': callback.message.message_id,
+            'channel_chat_id': callback.message.chat.id,
+        },
+        AdminForm.setting_price,
     )
     try:
         await callback.message.edit_reply_markup(reply_markup=None)
