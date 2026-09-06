@@ -13,6 +13,7 @@ Deploy notes:
 import asyncio
 import html
 import json
+import logging
 import os
 import sqlite3
 from datetime import datetime, timedelta, timezone
@@ -83,8 +84,8 @@ LEAD_CHANNEL_INVITE_TEXT = os.getenv(
 )
 LEAD_FOLLOWUP_TEXT = os.getenv(
     'LEAD_FOLLOWUP_TEXT',
-    'Добрый день! Как вам гайд? Узнали ли в каких-то признаках себя? '
-    'Если хочется разобраться глубже — запишитесь на диагностику, буду рада пообщаться.'
+    'Привет! Как тебе гайд? Узнала ли в каких-то признаках себя?\n'
+    'Если хочешь разобраться глубже — запишись на диагностику, буду рада пообщаться.'
 )
 LEAD_FOLLOWUP_HOURS = int(os.getenv('LEAD_FOLLOWUP_HOURS', '48'))
 CHANNEL_USERNAME = os.getenv('CHANNEL_USERNAME', 'https://t.me/iamselfvalue')
@@ -161,11 +162,22 @@ def get_all_user_ids():
     return [r['user_id'] for r in rows]
 
 
+def dedupe_pending_followups():
+    """Keep only the latest pending follow-up per user to avoid duplicate reminders."""
+    with _db() as conn:
+        conn.execute(
+            'DELETE FROM followups WHERE sent = 0 AND id NOT IN '
+            '(SELECT MAX(id) FROM followups WHERE sent = 0 GROUP BY user_id)'
+        )
+        conn.commit()
+
+
 def schedule_followup(user_id: int, chat_id: int, text: str, hours: int = 48):
     due = datetime.now(timezone.utc) + timedelta(hours=hours)
     with _db() as conn:
+        conn.execute('DELETE FROM followups WHERE user_id = ? AND sent = 0', (user_id,))
         conn.execute(
-            'INSERT OR REPLACE INTO followups (user_id, chat_id, due_at, text, sent) '
+            'INSERT INTO followups (user_id, chat_id, due_at, text, sent) '
             'VALUES (?, ?, ?, ?, 0)',
             (user_id, chat_id, due.isoformat(), text),
         )
@@ -327,6 +339,26 @@ async def skip_contact(message: Message):
         await send_channel_invite(message)
 
 
+@router.message(Command('support'))
+async def cmd_support(message: Message, command: CommandObject):
+    user = message.from_user
+    text = command.args.strip() if command.args else None
+    if not text:
+        await message.answer('Напиши /support и текст проблемы — я передам администратору.')
+        return
+    for admin_id in ADMIN_IDS:
+        try:
+            await message.bot.send_message(
+                admin_id,
+                f'💬 Обращение в поддержку от {user.mention_html()} (ID: <code>{user.id}</code>):\n\n'
+                f'{html.escape(text)}',
+                parse_mode=ParseMode.HTML,
+            )
+        except Exception:
+            logging.exception('Failed to forward support message to admin %s', admin_id)
+    await message.answer('Передала сообщение. Мы ответим, как только сможем.')
+
+
 @router.message(Command('myid'))
 async def cmd_myid(message: Message):
     user = message.from_user
@@ -340,6 +372,7 @@ async def cmd_help(message: Message):
             'Команды:\n'
             '/start — получить медитацию или гайд\n'
             '/myid — узнать свой Telegram ID\n'
+            '/support — обращение в поддержку\n'
             '/help — справка\n\n'
             'Админ-команды:\n'
             '/stats — подписчики\n'
@@ -347,7 +380,10 @@ async def cmd_help(message: Message):
             '/broadcast — рассылка'
         )
     else:
-        text = 'Просто напиши /start — я пришлю гайд 💜'
+        text = (
+            'Просто напиши /start — я пришлю гайд 💜\n\n'
+            'Если что-то пошло не так — напиши /support с текстом проблемы, передам администратору.'
+        )
     await message.answer(text)
 
 
@@ -477,6 +513,7 @@ async def main() -> None:
         raise RuntimeError('BOT_TOKEN is not set. Copy .env.example to .env and fill it.')
 
     await asyncio.to_thread(init_db)
+    await asyncio.to_thread(dedupe_pending_followups)
 
     api = None
     if TELEGRAM_API_BASE_URL:
