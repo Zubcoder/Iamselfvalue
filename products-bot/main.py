@@ -356,8 +356,9 @@ async def submit_order_for_quote(message: Message, state: FSMContext):
     logging.info('Order saved id=%s for quote', order_id)
     caption = build_order_caption(order_id, data, user)
     admin_hint = (
-        '\n\n💬 Для расчёта нажми кнопку ниже или ответь на это сообщение.\n'
-        'Пример: <code>1400, 3-5 рабочих дней</code>'
+        '\n\n💬 Напиши стоимость доставки и сроки — бот сам прибавит цену товара.\n'
+        'Можно просто в канал или ответом на это сообщение.\n'
+        'Пример: <code>400, 3-5 рабочих дней</code>'
     )
     keyboard = InlineKeyboardBuilder()
     keyboard.button(
@@ -571,6 +572,22 @@ def parse_price_text(text: str) -> tuple[str | None, str]:
     return str(total), delivery_info
 
 
+def parse_delivery_text(order: sqlite3.Row, text: str) -> tuple[str | None, str]:
+    """Parse delivery cost from text and return total = product price + delivery cost."""
+    delivery_cost, delivery_info = parse_price_text(text)
+    if delivery_cost is None:
+        return None, ''
+    try:
+        product_price = float(PRODUCTS[order['product']]['price'])
+        delivery = float(delivery_cost)
+        total_val = product_price + delivery
+        if total_val == int(total_val):
+            total_val = int(total_val)
+    except (KeyError, ValueError, TypeError):
+        return None, ''
+    return str(total_val), delivery_info
+
+
 async def set_user_state_and_data(storage, user_id: int, bot_id: int, data: dict, state):
     key = StorageKey(chat_id=user_id, user_id=user_id, bot_id=bot_id)
     await storage.set_state(key, state)
@@ -619,14 +636,14 @@ async def on_channel_price_reply(message: Message):
         message.from_user.id if message.from_user else None,
     )
 
-    total, delivery_info = parse_price_text(message.text)
-    if total is None:
-        logging.warning('Could not parse price from channel reply: %s', message.text)
-        return
-
     order = await asyncio.to_thread(get_order_by_channel_message_id, original_msg_id)
     if not order:
         logging.warning('No order found for channel message %s', original_msg_id)
+        return
+
+    total, delivery_info = parse_delivery_text(order, message.text)
+    if total is None:
+        logging.warning('Could not parse delivery from channel reply: %s', message.text)
         return
 
     await apply_price_and_notify(message.bot, order, total, delivery_info, original_msg_id)
@@ -649,14 +666,14 @@ async def log_channel_post(message: Message):
         return
     if message.from_user and message.from_user.id == message.bot.id:
         return
-    total, delivery_info = parse_price_text(message.text)
-    if total is None:
-        return
     order = await asyncio.to_thread(get_latest_pending_order, message.message_id)
     if not order:
         logging.warning('No pending order for channel post price text: %s', message.text)
         return
-    logging.info('Treating channel post as price for order %s', order['id'])
+    total, delivery_info = parse_delivery_text(order, message.text)
+    if total is None:
+        return
+    logging.info('Treating channel post as delivery for order %s', order['id'])
     await apply_price_and_notify(message.bot, order, total, delivery_info, order['channel_message_id'])
     try:
         await message.delete()
@@ -686,8 +703,8 @@ async def on_price_button(callback: CallbackQuery):
         f'Имя: {_he(order["name"])}\n'
         f'Телефон: {_he(order["phone"])}\n'
         f'Адрес: {_he(order["address"] or "")}\n\n'
-        f'Укажи итоговую сумму (товар + доставку) и сроки доставки одним сообщением.\n'
-        f'Пример: <code>1400, 3-5 рабочих дней</code>'
+        f'Укажи стоимость доставки и сроки одним сообщением. Бот сам прибавит цену товара.\n'
+        f'Пример: <code>400, 3-5 рабочих дней</code>'
     )
 
     try:
@@ -713,7 +730,7 @@ async def on_price_button(callback: CallbackQuery):
             'channel_message_id': callback.message.message_id,
         },
     )
-    await callback.answer('Написала тебе в личку. Ответь там сумму и сроки доставки.', show_alert=True)
+    await callback.answer('Написала тебе в личку. Ответь стоимостью доставки и сроками — я прибавлю цену товара.', show_alert=True)
 
 
 @router.message(AdminForm.setting_price, F.text)
@@ -727,21 +744,21 @@ async def process_set_price(message: Message, state: FSMContext):
         await state.clear()
         return
 
-    total, delivery_info = parse_price_text(message.text)
-    if total is None:
-        await message.answer(
-            'Не удалось распознать сумму. Пример: <code>1400, 3-5 рабочих дней</code>',
-            parse_mode=ParseMode.HTML,
-        )
-        return
-
     order = await asyncio.to_thread(get_order, order_id)
     if not order:
         await message.answer('Заказ не найден.')
         await state.clear()
         return
 
-    logging.info('Admin %s set price for order %s: %s, %s', message.from_user.id, order_id, total, delivery_info)
+    total, delivery_info = parse_delivery_text(order, message.text)
+    if total is None:
+        await message.answer(
+            'Не удалось распознать стоимость доставки. Пример: <code>400, 3-5 рабочих дней</code>',
+            parse_mode=ParseMode.HTML,
+        )
+        return
+
+    logging.info('Admin %s set delivery for order %s: total %s, delivery %s', message.from_user.id, order_id, total, delivery_info)
     await apply_price_and_notify(message.bot, order, total, delivery_info, channel_message_id)
     await state.clear()
 
