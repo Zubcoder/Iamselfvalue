@@ -40,15 +40,15 @@ MEDITATION_FILE = os.getenv('MEDITATION_FILE', str(Path(__file__).parent / 'medi
 JAM_WELCOME_TEXT = os.getenv(
     'JAM_WELCOME_TEXT',
     (
-        'Добро пожаловать 🍊\n\n'
-        'Положите ложечку апельсинового джема на язык, закройте глаза и позвольте себе '
+        'Привет 🍊\n\n'
+        'Положи ложечку апельсинового джема на язык, закрой глаза и позволь себе '
         'раскрыть внутреннее солнце.\n\n'
-        'Ниже — ваша медитация.'
+        'Ниже — твоя медитация.'
     ),
 )
 JAM_CONTACT_REQUEST_TEXT = os.getenv(
     'JAM_CONTACT_REQUEST_TEXT',
-    'Если хотите, оставьте номер телефона — я напишу, когда появятся новые вкусы и продукты.'
+    'Если хочешь, оставь номер телефона — я напишу, когда появятся новые вкусы и продукты.'
 )
 JAM_NO_MEDITATION_TEXT = os.getenv(
     'JAM_NO_MEDITATION_TEXT',
@@ -60,15 +60,15 @@ LEAD_PDF_FILE = os.getenv('LEAD_PDF_FILE', str(Path(__file__).parent / 'media' /
 LEAD_VIDEO_NOTE_FILE = os.getenv('LEAD_VIDEO_NOTE_FILE', str(Path(__file__).parent / 'media' / 'lead_goodgirl_video.mp4'))
 LEAD_WELCOME_TEXT = os.getenv(
     'LEAD_WELCOME_TEXT',
-    'Здравствуйте. Меня зовут Екатерина. Рада, что вы здесь.\n\n'
-    'Сейчас я пришлю вам небольшой гайд «5 признаков синдрома «хорошей девочки»». '
+    'Привет! Меня зовут Екатерина. Рада, что ты здесь.\n\n'
+    'Сейчас я пришлю тебе небольшой гайд «5 признаков синдрома «хорошей девочки»». '
     'Это не про ярлыки — это про то, чтобы внимательно присмотреться к себе. '
-    'Если что-то откликнется внутри, напишите мне — и мы вместе разберёмся, '
+    'Если что-то откликнется внутри, напиши мне — и мы вместе разберёмся, '
     'как вернуться к себе настоящей.'
 )
 LEAD_CONTACT_REQUEST_TEXT = os.getenv(
     'LEAD_CONTACT_REQUEST_TEXT',
-    'Оставьте номер — я напишу, когда освободятся места на сессии. '
+    'Оставь номер — я напишу, когда освободятся места на сессии. '
     'Это добровольно: можно нажать «Пропустить» и просто забрать гайд.'
 )
 LEAD_THANKS_CONTACT_TEXT = os.getenv('LEAD_THANKS_CONTACT_TEXT', 'Спасибо! Контакт сохранён. До встречи ✨')
@@ -78,7 +78,7 @@ LEAD_NO_FILE_TEXT = os.getenv(
 )
 LEAD_CHANNEL_INVITE_TEXT = os.getenv(
     'LEAD_CHANNEL_INVITE_TEXT',
-    'Если тема синдрома «хорошей девочки» откликается — приходите в мой Telegram-канал: '
+    'Если тема синдрома «хорошей девочки» откликается — приходи в мой Telegram-канал: '
     'там практики, мысли и анонсы сессий.\n\n'
     'https://t.me/iamselfvalue'
 )
@@ -245,7 +245,7 @@ async def send_lead_magnet(message: Message, user: types.User):
     if pdf_path.is_file():
         await message.answer_document(
             document=FSInputFile(pdf_path),
-            caption='Ваш гайд — во вложении.',
+            caption='Твой гайд — во вложении.',
         )
     else:
         await message.answer(LEAD_NO_FILE_TEXT)
@@ -332,7 +332,7 @@ async def skip_contact(message: Message):
         if row and row['campaign']:
             campaign = row['campaign']
     await message.answer(
-        'Хорошо. Если передумаете — напишите /start.',
+        'Хорошо. Если передумаешь — напиши /start.',
         reply_markup=types.ReplyKeyboardRemove(),
     )
     if campaign.startswith('lead_'):
@@ -362,7 +362,7 @@ async def cmd_support(message: Message, command: CommandObject):
 @router.message(Command('myid'))
 async def cmd_myid(message: Message):
     user = message.from_user
-    await message.answer(f'Ваш Telegram ID: <code>{user.id}</code>', parse_mode=ParseMode.HTML)
+    await message.answer(f'Твой Telegram ID: <code>{user.id}</code>', parse_mode=ParseMode.HTML)
 
 
 @router.message(Command('help'))
