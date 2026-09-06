@@ -803,6 +803,26 @@ async def confirm_payment(callback: CallbackQuery):
     await callback.answer('Оплата подтверждена, медитация отправлена.')
 
 
+@router.message(Command('support'))
+async def cmd_support(message: Message, command: CommandObject):
+    user = message.from_user
+    text = command.args.strip() if command.args else None
+    if not text:
+        await message.answer('Напиши /support и текст проблемы — я передам администратору.')
+        return
+    for admin_id in ADMIN_IDS:
+        try:
+            await message.bot.send_message(
+                admin_id,
+                f'💬 Обращение в поддержку от {user.mention_html()} (ID: <code>{user.id}</code>):\n\n'
+                f'{html.escape(text)}',
+                parse_mode=ParseMode.HTML,
+            )
+        except Exception:
+            logging.exception('Failed to forward support message to admin %s', admin_id)
+    await message.answer('Передала сообщение. Мы ответим, как только сможем.')
+
+
 @router.message(Command('help'))
 async def cmd_help(message: Message):
     if message.from_user.id in ADMIN_IDS:
@@ -814,14 +834,17 @@ async def cmd_help(message: Message):
             '/export — выгрузка заказов (CSV)\n'
             '/myid — узнать свой Telegram ID\n'
             '/testorder — отправить тестовую заявку в канал\n'
+            '/support — обращение в поддержку\n'
             '/help — справка\n\n'
-            'Для расчёта суммы и сроков доставки нажми кнопку «Указать сумму и сроки доставки» под заказом в канале.\n'
-            'Бот пришлёт запрос в личку — ответь одним сообщением: сначала сумма, затем сроки. Пример: <code>1400, 3-5 рабочих дней</code>.'
+            'Для установки цены доставки и сроков нажми кнопку «Указать сумму и сроки доставки» под заказом в канале.\n'
+            'Бот пришлёт запрос в личку — ответь одним сообщением: сначала стоимость доставки, затем сроки. '
+            'Бот сам прибавит цену товара. Пример: <code>400, 3-5 рабочих дней</code>.'
         )
     else:
         text = (
             'Напиши /start, выбери товар, и я помогу оформить заказ.\n\n'
-            'Доставка рассчитывается отдельно: ты оставишь ФИО, телефон и адрес, а я пришлю итоговую сумму (товар + доставка) и реквизиты для оплаты.'
+            'Доставка рассчитывается отдельно: ты оставишь ФИО, телефон и адрес, а я пришлю итоговую сумму (товар + доставка) и реквизиты для оплаты.\n\n'
+            'Если что-то пошло не так — напиши /support с текстом проблемы, передам администратору.'
         )
     await message.answer(text)
 
