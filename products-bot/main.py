@@ -650,7 +650,7 @@ async def on_price_button(callback: CallbackQuery):
         f'Цена товара: {product.get("price", "")} ₽\n'
         f'Имя: {_he(order["name"])}\n'
         f'Телефон: {_he(order["phone"])}\n'
-        f'Адрес: {_he(order.get("address", "") or "")}\n\n'
+        f'Адрес: {_he(order["address"] or "")}\n\n'
         f'Укажи итоговую сумму (товар + доставку) и сроки доставки одним сообщением.\n'
         f'Пример: <code>1400, 3-5 рабочих дней</code>'
     )
