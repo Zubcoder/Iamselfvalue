@@ -186,6 +186,23 @@ def get_order_by_channel_message_id(channel_message_id: int):
     return row
 
 
+def get_latest_pending_order(before_message_id: int):
+    with _db() as conn:
+        row = conn.execute(
+            """
+            SELECT * FROM orders
+            WHERE status = 'pending'
+              AND channel_message_id IS NOT NULL
+              AND channel_message_id <= ?
+              AND (total IS NULL OR total = '')
+            ORDER BY channel_message_id DESC
+            LIMIT 1
+            """,
+            (before_message_id,),
+        ).fetchone()
+    return row
+
+
 def update_order_channel_message_id(order_id: int, channel_message_id: int):
     with _db() as conn:
         conn.execute(
@@ -621,12 +638,30 @@ async def on_channel_price_reply(message: Message):
 
 @router.channel_post(F.chat.id == int(ORDERS_CHANNEL_ID or 0), F.text)
 async def log_channel_post(message: Message):
+    reply_id = message.reply_to_message.message_id if message.reply_to_message else None
     logging.info(
         'Channel post in orders channel msg_id=%s text=%s reply_to=%s',
         message.message_id,
         message.text[:50] if message.text else None,
-        message.reply_to_message.message_id if message.reply_to_message else None,
+        reply_id,
     )
+    if reply_id is not None:
+        return
+    if message.from_user and message.from_user.id == message.bot.id:
+        return
+    total, delivery_info = parse_price_text(message.text)
+    if total is None:
+        return
+    order = await asyncio.to_thread(get_latest_pending_order, message.message_id)
+    if not order:
+        logging.warning('No pending order for channel post price text: %s', message.text)
+        return
+    logging.info('Treating channel post as price for order %s', order['id'])
+    await apply_price_and_notify(message.bot, order, total, delivery_info, order['channel_message_id'])
+    try:
+        await message.delete()
+    except Exception:
+        logging.exception('Failed to delete channel price post for order %s', order['id'])
 
 
 @router.callback_query(F.data.startswith('price:'))
