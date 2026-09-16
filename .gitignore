@@ -7,3 +7,5 @@ __pycache__/
 *.pyc
 *.db
 *.log
+jam-bot/.data/
+jam-bot/.venv/
