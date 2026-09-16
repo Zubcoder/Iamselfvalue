@@ -31,8 +31,6 @@ GREETING_VIDEO_NOTE = Path(os.getenv('GREETING_VIDEO_NOTE', str(MEDIA_DIR / 'gre
 MEDITATION_FILE = Path(os.getenv('MEDITATION_FILE', str(MEDIA_DIR / 'meditation.mp3')))
 MEDITATION_TITLE = 'Открой своё внутреннее солнце'
 MEDITATION_PERFORMER = 'Екатерина · Я Есть Ценность'
-CHANNEL_URL = os.getenv('CHANNEL_URL', 'https://t.me/iamselfvalue')
-SITE_URL = os.getenv('SITE_URL', 'https://iamselfvalue.ru')
 
 router = Router()
 
@@ -93,13 +91,6 @@ async def cmd_start(message: Message, command: CommandObject):
     campaign = command.args.strip() if command.args else None
     await asyncio.to_thread(track_user, user, campaign)
 
-    name = html.escape(user.first_name or '')
-    await message.answer(
-        f'Привет{", " + name if name else ""}! Меня зовут Екатерина.\n'
-        'Рада, что ты открыл(а) баночку апельсинового джема «Твоё наслаждение» — '
-        'а вместе с ней и это маленькое путешествие к себе. 🍊'
-    )
-
     if GREETING_VIDEO_NOTE.is_file():
         cached = await asyncio.to_thread(get_cached_file_id, 'greeting', GREETING_VIDEO_NOTE)
         sent = await message.answer_video_note(cached or FSInputFile(GREETING_VIDEO_NOTE))
@@ -108,10 +99,7 @@ async def cmd_start(message: Message, command: CommandObject):
     else:
         logging.warning('Greeting video note not found: %s', GREETING_VIDEO_NOTE)
 
-    await message.answer(
-        '🎧 Ниже — твоя медитация <b>«Открой своё внутреннее солнце»</b> (около 4 минут).\n\n'
-        'Найди спокойное место, надень наушники, сделай глубокий вдох — и включай.'
-    )
+    await message.answer('Ниже — твоя медитация «Открой своё внутреннее солнце»')
 
     if MEDITATION_FILE.is_file():
         cached = await asyncio.to_thread(get_cached_file_id, 'meditation', MEDITATION_FILE)
@@ -119,20 +107,12 @@ async def cmd_start(message: Message, command: CommandObject):
             cached or FSInputFile(MEDITATION_FILE),
             title=MEDITATION_TITLE,
             performer=MEDITATION_PERFORMER,
-            caption='Возвращайся к медитации, когда захочется тепла и опоры. ☀️',
         )
         if not cached and sent.audio:
             await asyncio.to_thread(set_cached_file_id, 'meditation', MEDITATION_FILE, sent.audio.file_id)
     else:
         logging.warning('Meditation file not found: %s', MEDITATION_FILE)
         await message.answer('Медитация скоро появится здесь. Напиши /support, если долго не приходит.')
-
-    await message.answer(
-        'Если тема ценности себя откликается — приходи в мой Telegram-канал '
-        f'<a href="{CHANNEL_URL}">Я Есть Ценность</a> и на сайт <a href="{SITE_URL}">iamselfvalue.ru</a>.\n\n'
-        'Получить медитацию ещё раз — /start. Вопрос или что-то не работает — /support.',
-        disable_web_page_preview=True,
-    )
 
 
 @router.message(Command('help'))
