@@ -87,7 +87,10 @@ def draw_text_center(draw, text, y, font, fill, shadow=True):
     draw.text((x, y), text, font=font, fill=fill)
 
 
-def make_sticker(bot_username='iamselfvalue_bot', campaign='orange_jam'):
+BOT_USERNAME = 'Open_your_inner_sun_bot'
+
+
+def make_sticker(bot_username=BOT_USERNAME, campaign='orange_jam'):
     url = f'https://t.me/{bot_username}?start={campaign}'
 
     # Print file with bleed, transparent outside cut circle
@@ -120,7 +123,7 @@ def make_sticker(bot_username='iamselfvalue_bot', campaign='orange_jam'):
 
     draw_text_center(draw, 'Я Есть Ценность', brand_y, brand_font, GOLD)
     draw_text_center(draw, 'Апельсиновый джем', flavor_y, flavor_font, WHITE)
-    draw_text_center(draw, 'Твое наслаждение', tagline_y, tagline_font, GOLD)
+    draw_text_center(draw, '«Твоё наслаждение»', tagline_y, tagline_font, GOLD)
 
     # QR code below the top text block
     qr_size = 130
@@ -154,6 +157,70 @@ def make_sticker(bot_username='iamselfvalue_bot', campaign='orange_jam'):
     return url
 
 
+# Body label for the 100 ml hexagonal jar (jar 70 mm across corners,
+# 65 mm tall): one facet is ~35 mm wide, so a 60 x 35 mm label spans two facets.
+BODY_W_MM, BODY_H_MM, BODY_BLEED_MM = 60, 35, 2
+
+
+def make_body_label(bot_username=BOT_USERNAME, campaign='orange_jam'):
+    url = f'https://t.me/{bot_username}?start={campaign}'
+    w = int(BODY_W_MM * MM_TO_PX)
+    h = int(BODY_H_MM * MM_TO_PX)
+    b = int(BODY_BLEED_MM * MM_TO_PX)
+    tw, th = w + 2 * b, h + 2 * b
+
+    img = Image.new('RGBA', (tw, th), (0, 0, 0, 0))
+    bg = radial_gradient((tw, th), PURPLE, EMERALD)
+    mask = Image.new('L', (tw, th), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, tw - 1, th - 1), radius=b + 20, fill=255)
+    img.paste(bg, (0, 0), mask)
+    draw = ImageDraw.Draw(img)
+    draw.rounded_rectangle((b, b, b + w - 1, b + h - 1), radius=20, outline=GOLD, width=3)
+    draw.rounded_rectangle((b + 14, b + 14, b + w - 15, b + h - 15), radius=12, outline=GOLD, width=1)
+
+    # QR block on the left
+    qr_size = int(21 * MM_TO_PX)
+    qr = make_qr(url, qr_size)
+    qx = b + int(4.5 * MM_TO_PX)
+    qy = (th - qr_size) // 2
+    backing = Image.new('RGBA', (qr_size + 16, qr_size + 16), WHITE)
+    ImageDraw.Draw(backing).rounded_rectangle((0, 0, qr_size + 15, qr_size + 15), radius=12, fill=WHITE, outline=GOLD, width=2)
+    img.paste(backing, (qx - 8, qy - 8), backing)
+    img.paste(qr, (qx, qy), qr)
+
+    # text column on the right
+    brand_font = load_font(FONT_SERIF, 30)
+    flavor_font = load_font(FONT_SANS_BOLD, 26)
+    tagline_font = load_font(FONT_SANS, 22)
+    hint_font = load_font(FONT_SANS, 17)
+    col_x0 = qx + qr_size + int(3 * MM_TO_PX)
+    col_x1 = b + w - int(4 * MM_TO_PX)
+
+    def center_in_col(text, y, font, fill):
+        bbox = draw.textbbox((0, 0), text, font=font)
+        tw_ = bbox[2] - bbox[0]
+        x = col_x0 + (col_x1 - col_x0 - tw_) // 2
+        draw.text((x + 2, y + 2), text, font=font, fill=(0, 0, 0, 120))
+        draw.text((x, y), text, font=font, fill=fill)
+
+    lines = [('Я Есть', brand_font, GOLD), ('Ценность', brand_font, GOLD),
+             ('Апельсиновый', flavor_font, WHITE), ('джем', flavor_font, WHITE),
+             ('«Твоё наслаждение»', tagline_font, GOLD),
+             ('QR → медитация', hint_font, WHITE)]
+    total_h = sum(f.size for _, f, _ in lines) + 8 * (len(lines) - 1)
+    y = (th - total_h) // 2
+    for text, font, fill in lines:
+        center_in_col(text, y, font, fill)
+        y += font.size + 8
+
+    base = os.path.dirname(__file__)
+    img.save(os.path.join(base, 'jar-body-label-print.png'))
+    preview = img.crop((b, b, b + w, b + h))
+    preview.save(os.path.join(base, 'jar-body-label.png'))
+    print('Saved body label for', url)
+
+
 if __name__ == '__main__':
     url = make_sticker()
+    make_body_label()
     print('QR target:', url)
