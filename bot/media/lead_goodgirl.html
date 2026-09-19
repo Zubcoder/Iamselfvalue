@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Всё для всех. А я сама где?</title>
+  <title>Бесплатный гайд. 5 признаков синдрома хорошей девочки</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <style>
     @page { size: A4; margin: 0; }
@@ -10,218 +10,61 @@
     html, body { margin: 0; padding: 0; }
     body {
       font-family: 'Montserrat', sans-serif;
-      font-size: 10.3pt;
-      line-height: 1.5;
-      color: #f4f1ea;
+      font-size: 12pt;
+      line-height: 1.55;
+      color: #1E2A26;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
     .page {
-      width: 210mm;
-      height: 297mm;
-      overflow: hidden;
-      padding: 16mm 18mm 18mm;
+      width: 210mm; height: 297mm; overflow: hidden;
+      padding: 18mm 18mm 18mm;
       position: relative;
       page-break-after: always;
       background:
-        radial-gradient(ellipse 70% 50% at 15% 0%, rgba(212,175,55,0.16), transparent 70%),
-        radial-gradient(ellipse 60% 60% at 100% 100%, rgba(66,49,137,0.85), transparent 75%),
-        radial-gradient(ellipse 80% 70% at 0% 100%, rgba(16,80,64,0.9), transparent 75%),
-        linear-gradient(160deg, #0a3b2e 0%, #105040 38%, #2f2364 72%, #423189 100%);
+        linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)),
+        url('../../section-bg-light-v1.webp') center/cover no-repeat;
     }
     .page:last-child { page-break-after: auto; }
-    .page.cover {
-      background:
-        radial-gradient(circle 120mm at 78% 28%, rgba(212,175,55,0.28), transparent 70%),
-        radial-gradient(ellipse 80% 60% at 0% 100%, rgba(16,80,64,0.95), transparent 75%),
-        linear-gradient(160deg, #0a3b2e 0%, #105040 35%, #2f2364 70%, #423189 100%);
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding-bottom: 26mm;
+    .footer {
+      position: absolute; left: 18mm; right: 18mm; bottom: 9mm;
+      display: flex; justify-content: space-between;
+      font-size: 8.5pt; color: #7a7f7c; letter-spacing: 0.08em;
     }
-    .brand {
-      font-size: 9pt;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: #D4AF37;
-      font-weight: 600;
-    }
-    .cover h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 34pt;
-      line-height: 1.12;
-      margin: 14px 0 20px;
-      color: #fff;
-    }
-    .cover h1 span { color: #D4AF37; }
-    .cover::before {
-      content: '';
-      position: absolute;
-      right: 22mm; top: 34mm;
-      width: 62mm; height: 62mm;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(212,175,55,0.55) 0%, rgba(212,175,55,0.18) 45%, transparent 70%);
-      filter: blur(6px);
-    }
-    .cover::after {
-      content: '';
-      position: absolute;
-      right: 36mm; top: 48mm;
-      width: 34mm; height: 34mm;
-      border-radius: 50%;
-      border: 1.5px solid rgba(212,175,55,0.7);
-      box-shadow: 0 0 0 10mm rgba(212,175,55,0.08), 0 0 40px rgba(212,175,55,0.5);
-    }
-    .cover > * { position: relative; z-index: 1; }
-    .cover .subtitle {
-      font-size: 13pt;
-      line-height: 1.5;
-      color: rgba(255,255,255,0.9);
-      max-width: 150mm;
-      margin-bottom: 20px;
-    }
-    .cover .tag {
-      display: inline-block;
-      border: 1px solid rgba(212,175,55,0.7);
-      border-radius: 999px;
-      padding: 6px 16px;
-      font-size: 9.5pt;
-      color: #D4AF37;
-    }
-    h2 {
-      font-family: 'Playfair Display', serif;
-      color: #D4AF37;
-      font-size: 19pt;
-      line-height: 1.25;
-      margin: 0 0 14px;
-    }
-    h3 {
-      font-size: 12.5pt;
-      font-weight: 600;
-      color: #fff;
-      margin: 14px 0 6px;
-      display: flex;
-      gap: 12px;
-      align-items: baseline;
-    }
-    h3 .num {
-      flex: 0 0 auto;
-      width: 30px; height: 30px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #D4AF37, #B8962F);
-      color: #0a3b2e;
-      font-weight: 700;
-      font-size: 11pt;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-      transform: translateY(6px);
-    }
-    p { margin: 0 0 11px; color: #EDE8DC; }
-    .card {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(212,175,55,0.22);
-      border-radius: 18px;
-      padding: 14px 20px;
-      margin: 0 0 12px;
-      backdrop-filter: blur(4px);
-    }
-    .insight {
-      margin: 8px 0 4px;
-      padding: 10px 14px;
-      border-left: 3px solid #D4AF37;
-      background: rgba(212,175,55,0.10);
-      border-radius: 0 10px 10px 0;
-      color: #fff;
-      font-weight: 500;
-    }
+    .brand { font-size: 9.5pt; letter-spacing: 0.22em; text-transform: uppercase; color: #9C7F1C; font-weight: 600; margin-bottom: 4px; }
+    h1 { font-family: 'Playfair Display', serif; font-size: 30pt; line-height: 1.12; margin: 8px 0 12px; color: #0A3B2E; }
+    h1 span { color: #423189; }
+    .lead { font-size: 13pt; color: #2F2364; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid rgba(212,175,55,0.6); }
+    h2 { font-family: 'Playfair Display', serif; color: #423189; font-size: 20pt; line-height: 1.25; margin: 0 0 14px; }
+    h2 + h2, p + h2, ul + h2, .card + h2 { margin-top: 26px; }
+    h3 { font-size: 13.5pt; font-weight: 600; color: #0A3B2E; margin: 14px 0 6px; display: flex; gap: 12px; align-items: baseline; }
+    h3 .num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #D4AF37, #B8962F); color: #fff; font-weight: 700; font-size: 12pt; display: inline-flex; align-items: center; justify-content: center; line-height: 1; transform: translateY(6px); }
+    p { margin: 0 0 11px; }
+    .card, .step { background: rgba(255,255,255,0.62); border: 1px solid rgba(212,175,55,0.45); border-radius: 18px; padding: 14px 20px; margin: 0 0 14px; box-shadow: 0 6px 24px rgba(66,49,137,0.08); }
+    .insight { margin: 8px 0 4px; padding: 10px 14px; border-left: 3px solid #D4AF37; background: rgba(66,49,137,0.08); border-radius: 0 10px 10px 0; color: #2F2364; font-weight: 500; }
     .quote-list { list-style: none; padding: 0; margin: 0 0 12px; }
-    .quote-list li {
-      padding: 6px 14px;
-      margin-bottom: 5px;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(212,175,55,0.22);
-      font-style: italic;
-      color: #F4EBD0;
-    }
+    .quote-list li { padding: 7px 14px; margin-bottom: 6px; border-radius: 10px; background: rgba(255,255,255,0.62); border: 1px solid rgba(66,49,137,0.25); font-style: italic; color: #2F2364; }
     ul.plain { padding-left: 20px; margin: 0 0 12px; }
     ul.plain li { margin-bottom: 6px; }
-    .author {
-      display: flex;
-      gap: 20px;
-      align-items: center;
-      margin: 18px 0 20px;
-    }
-    .author img {
-      flex: 0 0 auto;
-      width: 38mm; height: 38mm;
-      object-fit: cover;
-      object-position: center 15%;
-      border-radius: 50%;
-      border: 3px solid #D4AF37;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-    }
-    .author .name {
-      font-family: 'Playfair Display', serif;
-      font-size: 15pt;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-    .author .role { color: #D4AF37; font-size: 10pt; margin-bottom: 8px; }
-    .step {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(212,175,55,0.35);
-      border-radius: 18px;
-      padding: 14px 20px;
-      margin: 0 0 12px;
-    }
+    .author { display: flex; gap: 20px; align-items: center; margin: 18px 0 20px; }
+    .author img { flex: 0 0 auto; width: 40mm; height: 40mm; object-fit: cover; object-position: center 15%; border-radius: 50%; border: 3px solid #D4AF37; box-shadow: 0 10px 30px rgba(66,49,137,0.25); }
+    .author .name { font-family: 'Playfair Display', serif; font-size: 16pt; color: #0A3B2E; margin-bottom: 4px; }
+    .author .role { color: #9C7F1C; font-size: 10.5pt; margin-bottom: 8px; }
     .step h3 { margin-top: 0; }
-    .step h3 .lbl { color: #D4AF37; }
-    .cta {
-      margin-top: 18px;
-      padding: 24px 26px;
-      border-radius: 20px;
-      background: linear-gradient(135deg, rgba(212,175,55,0.22), rgba(66,49,137,0.45));
-      border: 1px solid rgba(212,175,55,0.6);
-      text-align: center;
-    }
-    .cta h2 { margin-bottom: 8px; }
-    .cta .btn {
-      display: inline-block;
-      margin: 12px 0 8px;
-      padding: 12px 26px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #D4AF37, #B8962F);
-      color: #0a3b2e;
-      font-weight: 700;
-      text-decoration: none;
-    }
+    .step h3 .lbl { color: #9C7F1C; }
+    .cta { margin-top: 18px; padding: 24px 26px; border-radius: 20px; background: linear-gradient(135deg, #105040, #423189); border: 1px solid rgba(212,175,55,0.6); text-align: center; color: #fff; }
+    .cta h2 { color: #D4AF37; margin: 0 0 8px; }
+    .cta p { color: rgba(255,255,255,0.92); }
+    .cta .btn { display: inline-block; margin: 12px 0 8px; padding: 12px 26px; border-radius: 999px; background: linear-gradient(135deg, #D4AF37, #B8962F); color: #0a3b2e; font-weight: 700; text-decoration: none; }
     .cta a { color: #D4AF37; }
-    .small { font-size: 8.5pt; color: rgba(255,255,255,0.65); margin-top: 22px; }
-    .footer {
-      position: absolute;
-      left: 18mm; right: 18mm; bottom: 9mm;
-      display: flex; justify-content: space-between;
-      font-size: 8pt; color: rgba(255,255,255,0.55);
-      letter-spacing: 0.08em;
-    }
+    .small { font-size: 9pt; color: #5b6560; margin-top: 22px; }
   </style>
 </head>
 <body>
-
-<!-- ОБЛОЖКА -->
-<section class="page cover">
+<section class="page">
   <div class="brand">Я Есть Ценность · Екатерина Скулоченко</div>
   <h1>Всё для всех.<br>А я сама <span>где?</span></h1>
-  <div class="subtitle">5 признаков, что вы снова выбрали быть удобной, – и 3 шага, чтобы начать возвращать себе свою жизнь</div>
-  <div><span class="tag">Мини-гайд для женщин, которые умеют справляться со всем, но всё реже понимают, чего хотят сами</span></div>
-</section>
-
-<!-- СТРАНИЦА 1 -->
-<section class="page">
+  <p class="lead">5 признаков, что вы снова выбрали быть удобной, – и 3 шага, чтобы начать возвращать себе свою жизнь.</p>
   <div class="brand">Введение</div>
   <h2>Вы умеете быть сильной</h2>
   <p>Заботитесь, помогаете, договариваетесь, решаете проблемы, поддерживаете близких. В общем – делаете так, чтобы всем вокруг было хорошо. Насколько хватает сил. Вроде так и должно быть.</p>
@@ -237,8 +80,11 @@
   </div>
 
   <p>Этот гайд – не тест и не попытка навесить на вас ярлык «хорошей девочки». Это возможность бережно посмотреть на привычные реакции и заметить, в какие моменты вы перестаёте выбирать себя.</p>
+  <div class="footer"><span>iamselfvalue.ru</span><span>Я Есть Ценность</span></div>
+</section>
 
-  <h2 style="margin-top:26px">Почему мы становимся «хорошими девочками»</h2>
+<section class="page">
+  <h2>Почему мы становимся «хорошими девочками»</h2>
   <p>Когда-то вы могли усвоить:</p>
   <ul class="quote-list">
     <li>«Чтобы меня любили, я должна быть хорошей».</li>
@@ -250,10 +96,9 @@
   <p>В детстве такое поведение действительно помогало получать любовь, избегать конфликтов и сохранять отношения со взрослыми.</p>
   <p>Но девочка выросла. А привычка заслуживать любовь, быть удобной и откладывать себя осталась.</p>
   <p>Вот как она может проявляться во взрослой жизни.</p>
-  <div class="footer"><span>iamselfvalue.ru</span><span>2</span></div>
+  <div class="footer"><span>iamselfvalue.ru</span><span>Я Есть Ценность</span></div>
 </section>
 
-<!-- СТРАНИЦА 2 -->
 <section class="page">
   <div class="brand">5 признаков</div>
   <h2>Что вы снова выбрали быть удобной</h2>
@@ -271,25 +116,27 @@
     <p>Вы пытаетесь исправить ситуацию, сгладить конфликт, подобрать правильные слова и вернуть человеку хорошее настроение. Даже если его состояние вообще не связано с вами.</p>
     <div class="insight">Пока вы следите за чувствами окружающих, ваши собственные чувства остаются без внимания.</div>
   </div>
+  <div class="footer"><span>iamselfvalue.ru</span><span>Я Есть Ценность</span></div>
+</section>
 
+<section class="page">
   <div class="card">
     <h3><span class="num">3</span>На вопрос «Чего я хочу?» трудно ответить</h3>
     <p>Вы хорошо знаете, что нужно детям, мужу, родителям и коллегам, но когда речь заходит о вас, внутри возникает тишина.</p>
     <p>Вместо желания появляются ответы: «Надо отдохнуть, заняться здоровьем. Больше зарабатывать. Или куда-нибудь съездить». Даже забота о себе превращается в очередную задачу, которую необходимо правильно выполнить.</p>
     <div class="insight">Проблема не в том, что у вас нет желаний. Вы просто слишком долго хотели только то, что было можно, правильно и удобно для других.</div>
   </div>
-  <div class="footer"><span>iamselfvalue.ru</span><span>3</span></div>
-</section>
 
-<!-- СТРАНИЦА 3 -->
-<section class="page">
-  <div class="card">
+<div class="card">
     <h3><span class="num">4</span>Вам всё время нужно становиться ещё лучше</h3>
     <p>Ещё один диплом, обучение, ещё немного похудеть. Больше заработать. Стать спокойнее, мудрее, красивее, продуктивнее.</p>
     <p>Кажется, после вы, наконец, почувствуете себя достаточно хорошей, значимой и достойной любви. Но планка снова поднимается. Достижений становится больше, а внутреннего ощущения «со мной уже всё в порядке» так и не появляется.</p>
     <div class="insight">Потому что любовь и право быть собой невозможно окончательно заслужить очередным достижением.</div>
   </div>
+  <div class="footer"><span>iamselfvalue.ru</span><span>Я Есть Ценность</span></div>
+</section>
 
+<section class="page">
   <div class="card">
     <h3><span class="num">5</span>Отдых, радость и желания постоянно откладываются</h3>
     <p>Вы купите что-нибудь себе, когда будут закрыты все нужды семьи. Начнёте заниматься любимым делом или хобби, когда станет меньше работы. Отдохнёте, когда всё закончите. Поедете туда, куда хочется, когда появятся лишние деньги. Или когда дети подрастут.</p>
@@ -298,21 +145,20 @@
     <div class="insight">Ваша жизнь как будто стоит на паузе в ожидании момента, когда вам наконец будет можно.</div>
   </div>
 
-  <h2 style="margin-top:26px">3 шага, чтобы начать возвращаться к себе</h2>
+  <h2>3 шага, чтобы начать возвращаться к себе</h2>
   <p>Не нужно сразу менять всю жизнь, увольняться, разводиться или в один день стать неудобной для всех вокруг.</p>
   <p>Возвращение к себе начинается с маленьких шагов. И вы можете сделать их прямо сейчас, ничего глобально не меняя в жизни. И станет легче.</p>
-  <div class="footer"><span>iamselfvalue.ru</span><span>4</span></div>
-</section>
 
-<!-- СТРАНИЦА 4 -->
-<section class="page">
-  <div class="step">
+<div class="step">
     <h3><span class="lbl">Шаг 1.</span> Не отвечайте сразу</h3>
     <p>Когда вас о чём-то просят, не торопитесь автоматически соглашаться. Вместо привычного «да» скажите: «Мне нужно подумать. Я отвечу чуть позже».</p>
     <p>Эта фраза не означает отказ. Она возвращает вам время, необходимое, чтобы услышать собственный ответ.</p>
     <p>Затем спросите себя: «Если бы я не боялась расстроить этого человека, что бы я ответила?»</p>
   </div>
+  <div class="footer"><span>iamselfvalue.ru</span><span>Я Есть Ценность</span></div>
+</section>
 
+<section class="page">
   <div class="step">
     <h3><span class="lbl">Шаг 2.</span> Сверьте голову, чувства и тело</h3>
     <p>Перед решением задайте себе три вопроса:</p>
@@ -333,17 +179,16 @@
     <p>Выберите одно желание, которое можно исполнить в ближайшие 24 часа.</p>
     <p>Маленькие желания просты в исполнении и при этом очень важны – они возвращают энергию и постепенно создают ощущение: «Я снова есть в своей жизни. Я могу не только заботиться о других – я могу выбирать и себя».</p>
   </div>
-  <div class="footer"><span>iamselfvalue.ru</span><span>5</span></div>
+  <div class="footer"><span>iamselfvalue.ru</span><span>Я Есть Ценность</span></div>
 </section>
 
-<!-- СТРАНИЦА 5 -->
 <section class="page">
   <h2>Выбирать себя – не значит стать эгоисткой</h2>
   <p>Выбирать себя – не значит перестать любить близких, игнорировать их потребности и разрушать отношения.</p>
   <p>Это значит перестать автоматически исключать себя из числа людей, о которых вы заботитесь.</p>
   <p>Вы можете быть доброй, внимательной и любящей. Но не потому, что иначе вас отвергнут, а потому, что вы действительно этого хотите.</p>
 
-  <h2 style="margin-top:26px">Что делать с мыслью: «А если я уже не понимаю, чего хочу?»</h2>
+  <h2>Что делать с мыслью: «А если я уже не понимаю, чего хочу?»</h2>
   <p>Возможно, связь между головой, чувствами и телом стала настолько слабой, что услышать себя без помощи трудно.</p>
   <p>И для этого я придумала новый формат – <strong>«Час для себя»</strong>. Это бесплатная встреча-знакомство, на которой мы посмотрим:</p>
   <ul class="plain">
@@ -362,7 +207,7 @@
   </div>
 
   <p class="small">Материал носит ознакомительный характер и не заменяет индивидуальную консультацию специалиста.</p>
-  <div class="footer"><span>iamselfvalue.ru</span><span>6</span></div>
+  <div class="footer"><span>iamselfvalue.ru</span><span>Я Есть Ценность</span></div>
 </section>
 
 </body>

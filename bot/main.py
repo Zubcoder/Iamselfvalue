@@ -114,6 +114,10 @@ BOOKING_ALREADY_TEXT = os.getenv(
     'BOOKING_ALREADY_TEXT',
     'Твоя заявка уже у Екатерины — она свяжется с тобой ✨'
 )
+LEAD_PDF_FILENAME = os.getenv(
+    'LEAD_PDF_FILENAME',
+    'Бесплатный гайд. 5 признаков синдрома хорошей девочки.pdf',
+)
 LEAD_FOLLOWUP_HOURS = int(os.getenv('LEAD_FOLLOWUP_HOURS', '48'))
 CHANNEL_USERNAME = os.getenv('CHANNEL_USERNAME', 'https://t.me/iamselfvalue')
 LEAD_CHANNEL_ID_RAW = os.getenv('LEAD_CHANNEL_ID', '').strip()
@@ -341,7 +345,7 @@ async def send_lead_magnet(message: Message, user: types.User):
     pdf_path = Path(LEAD_PDF_FILE)
     if pdf_path.is_file():
         await message.answer_document(
-            document=FSInputFile(pdf_path),
+            document=FSInputFile(pdf_path, filename=LEAD_PDF_FILENAME),
             caption='Твой гайд — во вложении.',
         )
     else:
