@@ -510,6 +510,7 @@ async def cmd_help(message: Message):
             'Админ-команды:\n'
             '/stats — подписчики\n'
             '/leads — кто получил гайд, оставил контакт, записался\n'
+            '/testlead — отправить 3 тестовых поста в канал заявок\n'
             '/export — выгрузить контакты\n'
             '/broadcast — рассылка'
         )
@@ -519,6 +520,36 @@ async def cmd_help(message: Message):
             'Если что-то пошло не так — напиши /support с текстом проблемы, передам администратору.'
         )
     await message.answer(text)
+
+
+@router.message(Command('testlead'))
+async def cmd_testlead(message: Message):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+    if not LEAD_CHANNEL_ID:
+        await message.answer('LEAD_CHANNEL_ID не задан.')
+        return
+    user = message.from_user
+    for text in (
+        f'👀 <b>Новый подписчик получил гайд</b> (контакт пока не оставлен)\n'
+        f'{_user_line(user)}\nКампания: lead_goodgirl\n<i>ТЕСТ</i>',
+        f'📱 <b>КОНТАКТ: подписчик оставил номер</b>\n'
+        f'{_user_line(user)}\nТелефон: +7 900 000-00-00\nКампания: lead_goodgirl\n<i>ТЕСТ</i>',
+        f'📅 <b>ЗАЯВКА: запись на диагностическую встречу</b>\n'
+        f'{_user_line(user)}\nТелефон: +7 900 000-00-00\nКампания: lead_goodgirl\n<i>ТЕСТ</i>',
+    ):
+        try:
+            await message.bot.send_message(
+                LEAD_CHANNEL_ID, text,
+                parse_mode=ParseMode.HTML, disable_web_page_preview=True,
+            )
+        except Exception as e:
+            await message.answer(f'Ошибка отправки в канал {LEAD_CHANNEL_ID}: {e}')
+            return
+    await message.answer(
+        f'Отправил 3 тестовых поста в канал (ID {LEAD_CHANNEL_ID}). '
+        f'Если их нет в твоём канале заявок — значит бот привязан к другому каналу.'
+    )
 
 
 @router.message(Command('leads'))
