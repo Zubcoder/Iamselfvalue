@@ -172,7 +172,8 @@ def init_db():
         conn.commit()
 
 
-def add_or_update_subscriber(user: types.User, campaign: str, phone: str | None = None):
+def add_or_update_subscriber(user: types.User, campaign: str, phone: str | None = None) -> bool:
+    """Returns True if the subscriber record was created (first contact)."""
     now = datetime.now(timezone.utc).isoformat()
     with _db() as conn:
         conn.execute(
@@ -188,7 +189,11 @@ def add_or_update_subscriber(user: types.User, campaign: str, phone: str | None 
             ''',
             (user.id, user.username, user.first_name, user.last_name, phone, campaign, now),
         )
+        created = conn.execute(
+            'SELECT joined_at FROM subscribers WHERE user_id = ?', (user.id,)
+        ).fetchone()['joined_at'] == now
         conn.commit()
+        return created
 
 
 def get_subscriber(user_id: int):
@@ -357,8 +362,7 @@ async def cmd_start(message: Message, command: CommandObject):
     user = message.from_user
     campaign = command.args if command.args else 'lead_goodgirl'
 
-    is_new = await asyncio.to_thread(get_subscriber, user.id) is None
-    await asyncio.to_thread(add_or_update_subscriber, user, campaign, None)
+    is_new = await asyncio.to_thread(add_or_update_subscriber, user, campaign, None)
 
     if campaign.startswith('lead_') or campaign == 'lead':
         await send_lead_magnet(message, user)
@@ -407,6 +411,7 @@ async def on_contact(message: Message):
 
     if for_booking:
         await asyncio.to_thread(set_phone_asked_for_booking, user.id, None)
+        await asyncio.to_thread(mark_booked, user.id)
         await message.answer(BOOKING_THANKS_TEXT, reply_markup=types.ReplyKeyboardRemove())
         await notify_channel(
             message.bot,
@@ -440,8 +445,7 @@ async def on_booking(callback: CallbackQuery):
     if row is None:
         await asyncio.to_thread(add_or_update_subscriber, user, 'direct', None)
         row = await asyncio.to_thread(get_subscriber, user.id)
-    first_time = await asyncio.to_thread(mark_booked, user.id)
-    if not first_time:
+    if row and row['booked_at']:
         await callback.message.answer(BOOKING_ALREADY_TEXT)
         return
 
@@ -451,6 +455,11 @@ async def on_booking(callback: CallbackQuery):
         # No way to reach the user: ask for a phone before posting the request.
         await asyncio.to_thread(set_phone_asked_for_booking, user.id, '1')
         await callback.message.answer(BOOKING_NEED_PHONE_TEXT, reply_markup=contact_keyboard(skip=False))
+        return
+
+    first_time = await asyncio.to_thread(mark_booked, user.id)
+    if not first_time:
+        await callback.message.answer(BOOKING_ALREADY_TEXT)
         return
 
     await callback.message.answer(BOOKING_THANKS_TEXT)
@@ -679,9 +688,9 @@ async def scheduler(bot: Bot):
                     disable_web_page_preview=True,
                     reply_markup=booking_keyboard(),
                 )
-            except Exception:
+            except Exception as e:
                 # User blocked the bot or deleted the chat; mark as sent to avoid retries.
-                pass
+                logging.warning('Follow-up %s to %s failed: %s', row['id'], row['chat_id'], e)
             await asyncio.to_thread(mark_followup_sent, row['id'])
 
 
