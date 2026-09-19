@@ -10,19 +10,18 @@
     html, body { margin: 0; padding: 0; }
     body {
       font-family: 'Montserrat', sans-serif;
-      font-size: 12pt;
-      line-height: 1.55;
+      font-size: 13pt;
+      line-height: 1.5;
       color: #1E2A26;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
     .page {
       width: 210mm; height: 297mm; overflow: hidden;
-      padding: 18mm 18mm 18mm;
+      padding: 16mm 16mm 16mm;
       position: relative;
       page-break-after: always;
       background:
-        linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)),
         url('../../section-bg-light-v1.webp') center/cover no-repeat;
     }
     .page:last-child { page-break-after: auto; }
@@ -32,29 +31,29 @@
       font-size: 8.5pt; color: #7a7f7c; letter-spacing: 0.08em;
     }
     .brand { font-size: 9.5pt; letter-spacing: 0.22em; text-transform: uppercase; color: #9C7F1C; font-weight: 600; margin-bottom: 4px; }
-    h1 { font-family: 'Playfair Display', serif; font-size: 30pt; line-height: 1.12; margin: 8px 0 12px; color: #0A3B2E; }
+    h1 { font-family: 'Playfair Display', serif; font-size: 32pt; line-height: 1.12; margin: 8px 0 12px; color: #0A3B2E; }
     h1 span { color: #423189; }
-    .lead { font-size: 13pt; color: #2F2364; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid rgba(212,175,55,0.6); }
-    h2 { font-family: 'Playfair Display', serif; color: #423189; font-size: 20pt; line-height: 1.25; margin: 0 0 14px; }
+    .lead { font-size: 14pt; color: #2F2364; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid #D4AF37; }
+    h2 { font-family: 'Playfair Display', serif; color: #423189; font-size: 21pt; line-height: 1.25; margin: 0 0 14px; }
     h2 + h2, p + h2, ul + h2, .card + h2 { margin-top: 26px; }
-    h3 { font-size: 13.5pt; font-weight: 600; color: #0A3B2E; margin: 14px 0 6px; display: flex; gap: 12px; align-items: baseline; }
+    h3 { font-size: 14.5pt; font-weight: 600; color: #0A3B2E; margin: 14px 0 6px; display: flex; gap: 12px; align-items: baseline; }
     h3 .num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #D4AF37, #B8962F); color: #fff; font-weight: 700; font-size: 12pt; display: inline-flex; align-items: center; justify-content: center; line-height: 1; transform: translateY(6px); }
     p { margin: 0 0 11px; }
-    .card, .step { background: rgba(255,255,255,0.62); border: 1px solid rgba(212,175,55,0.45); border-radius: 18px; padding: 14px 20px; margin: 0 0 14px; box-shadow: 0 6px 24px rgba(66,49,137,0.08); }
-    .insight { margin: 8px 0 4px; padding: 10px 14px; border-left: 3px solid #D4AF37; background: rgba(66,49,137,0.08); border-radius: 0 10px 10px 0; color: #2F2364; font-weight: 500; }
+    .card, .step { background: #FBF8F3; border: 1px solid #D9C89A; border-radius: 16px; padding: 12px 18px; margin: 0 0 12px; }
+    .insight { margin: 8px 0 4px; padding: 9px 14px; border-left: 3px solid #D4AF37; background: #EFEAF6; border-radius: 0 10px 10px 0; color: #2F2364; font-weight: 500; }
     .quote-list { list-style: none; padding: 0; margin: 0 0 12px; }
-    .quote-list li { padding: 7px 14px; margin-bottom: 6px; border-radius: 10px; background: rgba(255,255,255,0.62); border: 1px solid rgba(66,49,137,0.25); font-style: italic; color: #2F2364; }
+    .quote-list li { padding: 7px 14px; margin-bottom: 6px; border-radius: 10px; background: #FBF8F3; border: 1px solid #C9C0DE; font-style: italic; color: #2F2364; }
     ul.plain { padding-left: 20px; margin: 0 0 12px; }
     ul.plain li { margin-bottom: 6px; }
     .author { display: flex; gap: 20px; align-items: center; margin: 18px 0 20px; }
-    .author img { flex: 0 0 auto; width: 40mm; height: 40mm; object-fit: cover; object-position: center 15%; border-radius: 50%; border: 3px solid #D4AF37; box-shadow: 0 10px 30px rgba(66,49,137,0.25); }
+    .author img { flex: 0 0 auto; width: 40mm; height: 40mm; object-fit: cover; object-position: center 15%; border-radius: 50%; border: 3px solid #D4AF37; }
     .author .name { font-family: 'Playfair Display', serif; font-size: 16pt; color: #0A3B2E; margin-bottom: 4px; }
     .author .role { color: #9C7F1C; font-size: 10.5pt; margin-bottom: 8px; }
     .step h3 { margin-top: 0; }
     .step h3 .lbl { color: #9C7F1C; }
-    .cta { margin-top: 18px; padding: 24px 26px; border-radius: 20px; background: linear-gradient(135deg, #105040, #423189); border: 1px solid rgba(212,175,55,0.6); text-align: center; color: #fff; }
+    .cta { margin-top: 18px; padding: 24px 26px; border-radius: 20px; background: linear-gradient(135deg, #105040, #423189); border: 1px solid #D4AF37; text-align: center; color: #fff; }
     .cta h2 { color: #D4AF37; margin: 0 0 8px; }
-    .cta p { color: rgba(255,255,255,0.92); }
+    .cta p { color: #F4F1EA; }
     .cta .btn { display: inline-block; margin: 12px 0 8px; padding: 12px 26px; border-radius: 999px; background: linear-gradient(135deg, #D4AF37, #B8962F); color: #0a3b2e; font-weight: 700; text-decoration: none; }
     .cta a { color: #D4AF37; }
     .small { font-size: 9pt; color: #5b6560; margin-top: 22px; }
