@@ -25,8 +25,8 @@ from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.telegram import TelegramAPIServer
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandObject, CommandStart
-from aiogram.types import BufferedInputFile, FSInputFile, Message, ReplyKeyboardMarkup, KeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.types import BufferedInputFile, CallbackQuery, FSInputFile, Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).with_name('.env'))
@@ -84,8 +84,39 @@ LEAD_CHANNEL_INVITE_TEXT = os.getenv(
 )
 LEAD_FOLLOWUP_TEXT = os.getenv(
     'LEAD_FOLLOWUP_TEXT',
-    'Привет! Как тебе гайд? Узнала ли в каких-то признаках себя?\n'
-    'Если хочешь разобраться глубже — запишись на диагностику, буду рада пообщаться.'
+    'Привет 💜\n\n'
+    'Ты уже успела посмотреть гайд? Пробовала применять советы?\n\n'
+    'Возможно, в каких-то пунктах узнала себя и даже поймала мысль: '
+    '«Блин, а ведь я правда так живу…»\n\n'
+    'Я предлагаю не останавливаться, потому что заметить знакомые ситуации, где ты предаешь себя – '
+    'это половина дела. Следующий шаг – важно понять, какой триггер срабатывает именно у тебя '
+    'и что удерживает в привычном сценарии.\n\n'
+    'Если хочешь разобраться, приходи ко мне на диагностику «Час для себя». '
+    'Посмотрим, что сейчас происходит у тебя, где ты застряла и с чего лучше начать изменения.\n\n'
+    '👉 Записаться на диагностику. Это бесплатно.'
+)
+BOOKING_BUTTON_TEXT = os.getenv('BOOKING_BUTTON_TEXT', '📅 Записаться на диагностическую встречу')
+BOOKING_CALLBACK = 'book_diag'
+BOOKING_PROMPT_TEXT = os.getenv(
+    'BOOKING_PROMPT_TEXT',
+    'Если хочешь разобраться глубже — приходи на бесплатную диагностическую встречу «Час для себя». '
+    'Нажми кнопку ниже, и Екатерина свяжется с тобой.'
+)
+BOOKING_THANKS_TEXT = os.getenv(
+    'BOOKING_THANKS_TEXT',
+    'Заявка принята ✨ Екатерина свяжется с тобой в ближайшее время, чтобы выбрать удобное время встречи.'
+)
+BOOKING_NEED_PHONE_TEXT = os.getenv(
+    'BOOKING_NEED_PHONE_TEXT',
+    'Чтобы Екатерина могла с тобой связаться, оставь, пожалуйста, номер телефона.'
+)
+BOOKING_ALREADY_TEXT = os.getenv(
+    'BOOKING_ALREADY_TEXT',
+    'Твоя заявка уже у Екатерины — она свяжется с тобой ✨'
+)
+LEAD_PDF_FILENAME = os.getenv(
+    'LEAD_PDF_FILENAME',
+    'Бесплатный гайд. 5 признаков синдрома хорошей девочки.pdf',
 )
 LEAD_FOLLOWUP_HOURS = int(os.getenv('LEAD_FOLLOWUP_HOURS', '48'))
 CHANNEL_USERNAME = os.getenv('CHANNEL_USERNAME', 'https://t.me/iamselfvalue')
@@ -122,6 +153,10 @@ def init_db():
             )
             '''
         )
+        existing = {r['name'] for r in conn.execute('PRAGMA table_info(subscribers)').fetchall()}
+        for col in ('booked_at', 'phone_asked_for_booking'):
+            if col not in existing:
+                conn.execute(f'ALTER TABLE subscribers ADD COLUMN {col} TEXT')
         conn.execute(
             '''
             CREATE TABLE IF NOT EXISTS followups (
@@ -156,6 +191,46 @@ def add_or_update_subscriber(user: types.User, campaign: str, phone: str | None 
         conn.commit()
 
 
+def get_subscriber(user_id: int):
+    with _db() as conn:
+        return conn.execute('SELECT * FROM subscribers WHERE user_id = ?', (user_id,)).fetchone()
+
+
+def mark_booked(user_id: int):
+    """Returns True if this is the first booking request from the user."""
+    now = datetime.now(timezone.utc).isoformat()
+    with _db() as conn:
+        cur = conn.execute(
+            'UPDATE subscribers SET booked_at = ? WHERE user_id = ? AND booked_at IS NULL',
+            (now, user_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+
+
+def set_phone_asked_for_booking(user_id: int, value: str | None):
+    with _db() as conn:
+        conn.execute('UPDATE subscribers SET phone_asked_for_booking = ? WHERE user_id = ?', (value, user_id))
+        conn.commit()
+
+
+def get_leads_report(limit: int = 30):
+    with _db() as conn:
+        rows = conn.execute(
+            'SELECT user_id, username, first_name, last_name, phone, campaign, joined_at, booked_at '
+            'FROM subscribers ORDER BY joined_at DESC LIMIT ?',
+            (limit,),
+        ).fetchall()
+        totals = conn.execute(
+            'SELECT COUNT(*) AS total, '
+            'SUM(CASE WHEN booked_at IS NOT NULL THEN 1 ELSE 0 END) AS booked, '
+            'SUM(CASE WHEN phone IS NOT NULL AND booked_at IS NULL THEN 1 ELSE 0 END) AS contact_only, '
+            'SUM(CASE WHEN phone IS NULL AND booked_at IS NULL THEN 1 ELSE 0 END) AS silent '
+            'FROM subscribers'
+        ).fetchone()
+    return rows, totals
+
+
 def get_all_user_ids():
     with _db() as conn:
         rows = conn.execute('SELECT user_id FROM subscribers').fetchall()
@@ -163,12 +238,13 @@ def get_all_user_ids():
 
 
 def dedupe_pending_followups():
-    """Keep only the latest pending follow-up per user to avoid duplicate reminders."""
+    """Keep only the latest pending follow-up per user and refresh its text."""
     with _db() as conn:
         conn.execute(
             'DELETE FROM followups WHERE sent = 0 AND id NOT IN '
             '(SELECT MAX(id) FROM followups WHERE sent = 0 GROUP BY user_id)'
         )
+        conn.execute('UPDATE followups SET text = ? WHERE sent = 0', (LEAD_FOLLOWUP_TEXT,))
         conn.commit()
 
 
@@ -207,15 +283,40 @@ def get_subscriber_count():
     return row['cnt']
 
 
-def contact_keyboard():
+def contact_keyboard(skip: bool = True):
     builder = ReplyKeyboardBuilder()
     builder.button(
         text='📱 Поделиться номером',
         request_contact=True,
     )
-    builder.button(text='🔕 Пропустить')
+    if skip:
+        builder.button(text='🔕 Пропустить')
     builder.adjust(1)
     return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+
+
+def booking_keyboard():
+    builder = InlineKeyboardBuilder()
+    builder.button(text=BOOKING_BUTTON_TEXT, callback_data=BOOKING_CALLBACK)
+    return builder.as_markup()
+
+
+def _user_line(user: types.User) -> str:
+    uname = f'@{user.username}' if user.username else 'нет username'
+    return (
+        f'Имя: <a href="tg://user?id={user.id}">{html.escape(user.full_name)}</a>\n'
+        f'Username: {uname}\n'
+        f'ID: <code>{user.id}</code>'
+    )
+
+
+async def notify_channel(bot: Bot, text: str):
+    if not LEAD_CHANNEL_ID:
+        return
+    try:
+        await bot.send_message(LEAD_CHANNEL_ID, text, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    except Exception:
+        logging.exception('Failed to post to leads channel %s', LEAD_CHANNEL_ID)
 
 
 async def send_meditation(message: Message):
@@ -244,7 +345,7 @@ async def send_lead_magnet(message: Message, user: types.User):
     pdf_path = Path(LEAD_PDF_FILE)
     if pdf_path.is_file():
         await message.answer_document(
-            document=FSInputFile(pdf_path),
+            document=FSInputFile(pdf_path, filename=LEAD_PDF_FILENAME),
             caption='Твой гайд — во вложении.',
         )
     else:
@@ -256,10 +357,18 @@ async def cmd_start(message: Message, command: CommandObject):
     user = message.from_user
     campaign = command.args if command.args else 'lead_goodgirl'
 
+    is_new = await asyncio.to_thread(get_subscriber, user.id) is None
     await asyncio.to_thread(add_or_update_subscriber, user, campaign, None)
 
     if campaign.startswith('lead_') or campaign == 'lead':
         await send_lead_magnet(message, user)
+        if is_new:
+            await notify_channel(
+                message.bot,
+                f'👀 <b>Новый подписчик получил гайд</b> (контакт пока не оставлен)\n'
+                f'{_user_line(user)}\n'
+                f'Кампания: {html.escape(campaign)}',
+            )
         contact_text = LEAD_CONTACT_REQUEST_TEXT
         await asyncio.to_thread(
             schedule_followup,
@@ -284,53 +393,81 @@ async def send_channel_invite(message: Message):
         parse_mode=ParseMode.HTML,
         disable_web_page_preview=False,
     )
+    await message.answer(BOOKING_PROMPT_TEXT, reply_markup=booking_keyboard())
 
 
 @router.message(F.contact)
 async def on_contact(message: Message):
     user = message.from_user
     phone = message.contact.phone_number if message.contact else None
-    campaign = 'direct'
-    with _db() as conn:
-        row = conn.execute('SELECT campaign FROM subscribers WHERE user_id = ?', (user.id,)).fetchone()
-        if row and row['campaign']:
-            campaign = row['campaign']
+    row = await asyncio.to_thread(get_subscriber, user.id)
+    campaign = (row['campaign'] if row and row['campaign'] else 'direct')
+    for_booking = bool(row and row['phone_asked_for_booking'])
     await asyncio.to_thread(add_or_update_subscriber, user, campaign, phone)
+
+    if for_booking:
+        await asyncio.to_thread(set_phone_asked_for_booking, user.id, None)
+        await message.answer(BOOKING_THANKS_TEXT, reply_markup=types.ReplyKeyboardRemove())
+        await notify_channel(
+            message.bot,
+            f'📅 <b>ЗАЯВКА: запись на диагностическую встречу</b>\n'
+            f'{_user_line(user)}\n'
+            f'Телефон: {html.escape(phone or "не указан")}\n'
+            f'Кампания: {html.escape(campaign)}',
+        )
+        return
+
     await message.answer(
         THANKS_CONTACT_TEXT,
         reply_markup=types.ReplyKeyboardRemove(),
     )
+    await notify_channel(
+        message.bot,
+        f'📱 <b>КОНТАКТ: подписчик оставил номер</b>\n'
+        f'{_user_line(user)}\n'
+        f'Телефон: {html.escape(phone or "не указан")}\n'
+        f'Кампания: {html.escape(campaign)}',
+    )
     if campaign.startswith('lead_'):
         await send_channel_invite(message)
-        await _forward_lead_to_channel(message, user, phone, campaign)
 
 
-async def _forward_lead_to_channel(message: Message, user, phone, campaign):
-    if not LEAD_CHANNEL_ID:
+@router.callback_query(F.data == BOOKING_CALLBACK)
+async def on_booking(callback: CallbackQuery):
+    user = callback.from_user
+    await callback.answer()
+    row = await asyncio.to_thread(get_subscriber, user.id)
+    if row is None:
+        await asyncio.to_thread(add_or_update_subscriber, user, 'direct', None)
+        row = await asyncio.to_thread(get_subscriber, user.id)
+    first_time = await asyncio.to_thread(mark_booked, user.id)
+    if not first_time:
+        await callback.message.answer(BOOKING_ALREADY_TEXT)
         return
-    try:
-        username = f'@{user.username}' if user.username else 'нет username'
-        text = (
-            f'📩 Новый контакт из бота\n'
-            f'Имя: {user.full_name}\n'
-            f'Username: {username}\n'
-            f'Телефон: {phone or "не указан"}\n'
-            f'Кампания: {campaign}'
-        )
-        await message.bot.send_message(LEAD_CHANNEL_ID, text)
-    except Exception:
-        # Channel may be inaccessible or not configured; do not break the flow.
-        pass
+
+    phone = row['phone'] if row else None
+    campaign = row['campaign'] if row and row['campaign'] else 'direct'
+    if not phone and not user.username:
+        # No way to reach the user: ask for a phone before posting the request.
+        await asyncio.to_thread(set_phone_asked_for_booking, user.id, '1')
+        await callback.message.answer(BOOKING_NEED_PHONE_TEXT, reply_markup=contact_keyboard(skip=False))
+        return
+
+    await callback.message.answer(BOOKING_THANKS_TEXT)
+    await notify_channel(
+        callback.bot,
+        f'📅 <b>ЗАЯВКА: запись на диагностическую встречу</b>\n'
+        f'{_user_line(user)}\n'
+        f'Телефон: {html.escape(phone or "не указан")}\n'
+        f'Кампания: {html.escape(campaign)}',
+    )
 
 
 @router.message(F.text == '🔕 Пропустить')
 async def skip_contact(message: Message):
     user = message.from_user
-    campaign = 'direct'
-    with _db() as conn:
-        row = conn.execute('SELECT campaign FROM subscribers WHERE user_id = ?', (user.id,)).fetchone()
-        if row and row['campaign']:
-            campaign = row['campaign']
+    row = await asyncio.to_thread(get_subscriber, user.id)
+    campaign = row['campaign'] if row and row['campaign'] else 'direct'
     await message.answer(
         'Хорошо. Если передумаешь — напиши /start.',
         reply_markup=types.ReplyKeyboardRemove(),
@@ -376,6 +513,8 @@ async def cmd_help(message: Message):
             '/help — справка\n\n'
             'Админ-команды:\n'
             '/stats — подписчики\n'
+            '/leads — кто получил гайд, оставил контакт, записался\n'
+            '/testlead — отправить 3 тестовых поста в канал заявок\n'
             '/export — выгрузить контакты\n'
             '/broadcast — рассылка'
         )
@@ -385,6 +524,62 @@ async def cmd_help(message: Message):
             'Если что-то пошло не так — напиши /support с текстом проблемы, передам администратору.'
         )
     await message.answer(text)
+
+
+@router.message(Command('testlead'))
+async def cmd_testlead(message: Message):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+    if not LEAD_CHANNEL_ID:
+        await message.answer('LEAD_CHANNEL_ID не задан.')
+        return
+    user = message.from_user
+    for text in (
+        f'👀 <b>Новый подписчик получил гайд</b> (контакт пока не оставлен)\n'
+        f'{_user_line(user)}\nКампания: lead_goodgirl\n<i>ТЕСТ</i>',
+        f'📱 <b>КОНТАКТ: подписчик оставил номер</b>\n'
+        f'{_user_line(user)}\nТелефон: +7 900 000-00-00\nКампания: lead_goodgirl\n<i>ТЕСТ</i>',
+        f'📅 <b>ЗАЯВКА: запись на диагностическую встречу</b>\n'
+        f'{_user_line(user)}\nТелефон: +7 900 000-00-00\nКампания: lead_goodgirl\n<i>ТЕСТ</i>',
+    ):
+        try:
+            await message.bot.send_message(
+                LEAD_CHANNEL_ID, text,
+                parse_mode=ParseMode.HTML, disable_web_page_preview=True,
+            )
+        except Exception as e:
+            await message.answer(f'Ошибка отправки в канал {LEAD_CHANNEL_ID}: {e}')
+            return
+    await message.answer(
+        f'Отправил 3 тестовых поста в канал (ID {LEAD_CHANNEL_ID}). '
+        f'Если их нет в твоём канале заявок — значит бот привязан к другому каналу.'
+    )
+
+
+@router.message(Command('leads'))
+async def cmd_leads(message: Message):
+    if message.from_user.id not in ADMIN_IDS:
+        return
+    rows, totals = await asyncio.to_thread(get_leads_report)
+    lines = [
+        f'Всего: {totals["total"]} · 📅 записались: {totals["booked"] or 0} · '
+        f'📱 только контакт: {totals["contact_only"] or 0} · 👀 без контакта: {totals["silent"] or 0}',
+        '',
+        'Последние 30:',
+    ]
+    for r in rows:
+        if r['booked_at']:
+            status = '📅 записалась'
+        elif r['phone']:
+            status = '📱 контакт'
+        else:
+            status = '👀 гайд, без контакта'
+        name = html.escape(' '.join(filter(None, [r['first_name'], r['last_name']])) or '—')
+        uname = f'@{r["username"]}' if r['username'] else ''
+        phone = r['phone'] or ''
+        date = (r['joined_at'] or '')[:10]
+        lines.append(f'{status} — <a href="tg://user?id={r["user_id"]}">{name}</a> {uname} {phone} · {date}')
+    await message.answer('\n'.join(lines), parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 
 @router.message(Command('stats'))
@@ -431,13 +626,13 @@ async def cmd_export(message: Message):
 
     with _db() as conn:
         rows = conn.execute(
-            'SELECT user_id, username, first_name, last_name, phone, campaign, joined_at '
+            'SELECT user_id, username, first_name, last_name, phone, campaign, joined_at, booked_at '
             'FROM subscribers ORDER BY joined_at DESC'
         ).fetchall()
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['user_id', 'username', 'first_name', 'last_name', 'phone', 'campaign', 'joined_at'])
+    writer.writerow(['user_id', 'username', 'first_name', 'last_name', 'phone', 'campaign', 'joined_at', 'booked_at'])
     writer.writerows(rows)
     output.seek(0)
 
@@ -472,12 +667,17 @@ async def scheduler(bot: Bot):
         await asyncio.sleep(60)
         rows = await asyncio.to_thread(get_due_followups)
         for row in rows:
+            sub = await asyncio.to_thread(get_subscriber, row['user_id'])
+            if sub and sub['booked_at']:
+                await asyncio.to_thread(mark_followup_sent, row['id'])
+                continue
             try:
                 await bot.send_message(
                     row['chat_id'],
                     row['text'],
                     parse_mode=ParseMode.HTML,
                     disable_web_page_preview=True,
+                    reply_markup=booking_keyboard(),
                 )
             except Exception:
                 # User blocked the bot or deleted the chat; mark as sent to avoid retries.
